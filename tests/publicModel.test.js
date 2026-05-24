@@ -82,7 +82,7 @@ describe("public model", () => {
         venueNote: "논현역 인근, 참여 확정자에게 개별 안내",
         capacityNote: "최대 10:10",
         applicationConditions: "92-06년생 남자 / 94-06년생 여자",
-        googleFormUrl: "https://forms.gle/example-replace-before-launch"
+        googleFormUrl: "https://forms.gle/3jSCCw38u8auqJ7Y6"
       })
     );
     expect(model.featuredEvent.timeSlots[0]).toEqual(
@@ -156,6 +156,15 @@ describe("public model", () => {
         badges: expect.any(Array)
       }),
       participants: [],
+      applicationStatus: expect.objectContaining({
+        url: expect.any(String),
+        updatedLabel: expect.any(String),
+        maleSummary: expect.any(String),
+        femaleSummary: expect.any(String),
+        maleRows: expect.any(Array),
+        femaleRows: expect.any(Array),
+        notes: expect.any(Array)
+      }),
       instagram: expect.objectContaining({
         handle: expect.any(String),
         url: expect.any(String),
@@ -192,6 +201,34 @@ describe("public model", () => {
   });
 
   it.each([
+    ["javascript URL", "javascript:alert(1)"],
+    ["http URL", "http://doyoulikeclassic.notion.site/status"],
+    ["relative URL", "/status"],
+    ["malformed URL", "https://[broken"]
+  ])("filters unsafe application status URLs for %s", (_caseName, unsafeUrl) => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+    const status = {
+      url: unsafeUrl,
+      updatedLabel: "서울 강남권 6기",
+      maleSummary: "남자 17명",
+      femaleSummary: "여자 20명",
+      maleRows: ["92년생 1명"],
+      femaleRows: ["94년생 1명"],
+      notes: ["노션에서 최신 현황을 확인합니다."]
+    };
+    db.prepare("update content_blocks set value_json = ? where block_key = ?").run(
+      JSON.stringify(status),
+      "applicationStatus"
+    );
+
+    const model = buildPublicModel(db);
+
+    expect(model.content.applicationStatus.url).toBe("");
+    expect(model.content.applicationStatus.maleRows).toEqual(["92년생 1명"]);
+  });
+
+  it.each([
     ["hero", null, { hero: { headline: "", subheadline: "", badges: [] } }],
     ["hero", "headline", { hero: { headline: "", subheadline: "", badges: [] } }],
     ["hero", [], { hero: { headline: "", subheadline: "", badges: [] } }],
@@ -200,6 +237,39 @@ describe("public model", () => {
     ["participants", "민지", { participants: [] }],
     ["participants", {}, { participants: [] }],
     ["participants", ["민지", 3], { participants: [] }],
+    ["applicationStatus", null, {
+      applicationStatus: {
+        url: "",
+        updatedLabel: "",
+        maleSummary: "",
+        femaleSummary: "",
+        maleRows: [],
+        femaleRows: [],
+        notes: []
+      }
+    }],
+    ["applicationStatus", {}, {
+      applicationStatus: {
+        url: "",
+        updatedLabel: "",
+        maleSummary: "",
+        femaleSummary: "",
+        maleRows: [],
+        femaleRows: [],
+        notes: []
+      }
+    }],
+    ["applicationStatus", { url: "https://example.com" }, {
+      applicationStatus: {
+        url: "",
+        updatedLabel: "",
+        maleSummary: "",
+        femaleSummary: "",
+        maleRows: [],
+        femaleRows: [],
+        notes: []
+      }
+    }],
     ["instagram", null, { instagram: { handle: "", url: "", reels: [] } }],
     ["instagram", "classic.rotation", { instagram: { handle: "", url: "", reels: [] } }],
     ["instagram", [], { instagram: { handle: "", url: "", reels: [] } }],

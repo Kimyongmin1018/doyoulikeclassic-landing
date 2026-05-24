@@ -40,6 +40,13 @@ export const contentInputSchema = z.object({
   heroSubheadline: z.string().trim().min(1).max(500),
   heroBadgesText: z.string().trim().min(1).max(500),
   participantsText: z.string().trim().min(1).max(500),
+  applicationStatusUrl: httpsUrl,
+  applicationStatusUpdatedLabel: z.string().trim().min(1).max(80),
+  applicationStatusMaleSummary: z.string().trim().min(1).max(40),
+  applicationStatusFemaleSummary: z.string().trim().min(1).max(40),
+  applicationStatusMaleRowsText: z.string().trim().min(1).max(1000),
+  applicationStatusFemaleRowsText: z.string().trim().min(1).max(1000),
+  applicationStatusNotesText: z.string().trim().min(1).max(800),
   instagramUrl: httpsUrl,
   instagramHandle: z.string().trim().min(1).max(60),
   instagramReelsText: z.string().trim().max(1200).optional().default(""),
@@ -257,6 +264,7 @@ function upsertContentBlock(db, key, value) {
 export function getContentForAdmin(db) {
   const hero = readJsonBlock(db, "hero", {});
   const participants = readJsonBlock(db, "participants", []);
+  const applicationStatus = readJsonBlock(db, "applicationStatus", {});
   const instagram = readJsonBlock(db, "instagram", {});
   const faq = readJsonBlock(db, "faq", []);
   const legal = readJsonBlock(db, "legal", {});
@@ -267,6 +275,13 @@ export function getContentForAdmin(db) {
     heroSubheadline: typeof hero.subheadline === "string" ? hero.subheadline : "",
     heroBadgesText: serializeLines(normalizeArray(hero.badges)),
     participantsText: serializeLines(normalizeArray(participants)),
+    applicationStatusUrl: typeof applicationStatus.url === "string" ? applicationStatus.url : "",
+    applicationStatusUpdatedLabel: typeof applicationStatus.updatedLabel === "string" ? applicationStatus.updatedLabel : "",
+    applicationStatusMaleSummary: typeof applicationStatus.maleSummary === "string" ? applicationStatus.maleSummary : "",
+    applicationStatusFemaleSummary: typeof applicationStatus.femaleSummary === "string" ? applicationStatus.femaleSummary : "",
+    applicationStatusMaleRowsText: serializeLines(normalizeArray(applicationStatus.maleRows)),
+    applicationStatusFemaleRowsText: serializeLines(normalizeArray(applicationStatus.femaleRows)),
+    applicationStatusNotesText: serializeLines(normalizeArray(applicationStatus.notes)),
     instagramUrl: typeof instagram.url === "string" ? instagram.url : "",
     instagramHandle: typeof instagram.handle === "string" ? instagram.handle : "",
     instagramReelsText: serializeLines(normalizeArray(instagram.reels)),
@@ -353,7 +368,7 @@ export function createEvent(db, input) {
     ? [{ label: "1회차", startsAt: "16:00", endsAt: "18:00" }]
     : parseTimeSlotsText(data.timeSlotsText);
   const priceRows = data.priceRowsText === undefined
-    ? [{ label: "기본", amount: "40,000원", note: "" }]
+    ? [{ label: "기본", amount: "35,000원", note: "" }]
     : parsePriceRowsText(data.priceRowsText);
 
   db.transaction(() => {
@@ -403,9 +418,22 @@ export function updateContent(db, input) {
   const data = contentInputSchema.parse(input);
   const badges = parseRequiredLines(data.heroBadgesText, "히어로 배지를 한 줄 이상 입력해 주세요.");
   const participants = parseRequiredLines(data.participantsText, "참여자 예시를 한 줄 이상 입력해 주세요.");
+  const applicationStatusMaleRows = parseRequiredLines(
+    data.applicationStatusMaleRowsText,
+    "남자 지원현황을 한 줄 이상 입력해 주세요."
+  );
+  const applicationStatusFemaleRows = parseRequiredLines(
+    data.applicationStatusFemaleRowsText,
+    "여자 지원현황을 한 줄 이상 입력해 주세요."
+  );
+  const applicationStatusNotes = parseRequiredLines(
+    data.applicationStatusNotesText,
+    "지원현황 안내 문구를 한 줄 이상 입력해 주세요."
+  );
   const reels = parseHttpsLines(data.instagramReelsText, "인스타그램 릴스 URL은 https 형식으로 입력해 주세요.");
   const faq = parseFaqText(data.faqText);
   const currentHero = readJsonBlock(db, "hero", {});
+  const currentApplicationStatus = readJsonBlock(db, "applicationStatus", {});
   const currentInstagram = readJsonBlock(db, "instagram", {});
   const currentLegal = readJsonBlock(db, "legal", {});
 
@@ -418,6 +446,16 @@ export function updateContent(db, input) {
       badges
     });
     upsertContentBlock(db, "participants", participants);
+    upsertContentBlock(db, "applicationStatus", {
+      ...currentApplicationStatus,
+      url: data.applicationStatusUrl,
+      updatedLabel: data.applicationStatusUpdatedLabel,
+      maleSummary: data.applicationStatusMaleSummary,
+      femaleSummary: data.applicationStatusFemaleSummary,
+      maleRows: applicationStatusMaleRows,
+      femaleRows: applicationStatusFemaleRows,
+      notes: applicationStatusNotes
+    });
     upsertContentBlock(db, "instagram", {
       ...currentInstagram,
       url: data.instagramUrl,

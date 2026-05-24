@@ -9,10 +9,10 @@ const timeSlots = [
 ];
 
 const priceRows = [
-  ["classic-rotation-6-price-base", "기본", "40,000원", "", 1],
-  ["classic-rotation-6-price-companion", "동반 할인", "32,000원", "40,000원에서 32,000원으로 할인", 2],
-  ["classic-rotation-6-price-alumni", "이전 기수 할인", "35,000원", "40,000원에서 35,000원으로 할인", 3],
-  ["classic-rotation-6-price-early-bird", "얼리버드 할인", "33,000원", "6/3까지 40,000원에서 33,000원으로 할인", 4]
+  ["classic-rotation-6-price-base", "기본", "35,000원", "", 1],
+  ["classic-rotation-6-price-companion", "동반 할인", "35,000원", "", 2],
+  ["classic-rotation-6-price-alumni", "이전 기수 할인", "35,000원", "", 3],
+  ["classic-rotation-6-price-early-bird", "얼리버드 할인", "35,000원", "", 4]
 ];
 
 const contentBlocks = {
@@ -30,6 +30,35 @@ const contentBlocks = {
     "연구원",
     "금융권 종사자"
   ],
+  applicationStatus: {
+    url: "https://doyoulikeclassic.notion.site/27281544f0928301a650015e4373f855",
+    updatedLabel: "서울 강남권 6기 | 2026.05.24 기준",
+    maleSummary: "남자 17명",
+    femaleSummary: "여자 20명",
+    maleRows: [
+      "92년생 1명",
+      "94년생 2명",
+      "95년생 3명",
+      "97년생 4명",
+      "99년생 3명",
+      "02년생 2명",
+      "05년생 2명"
+    ],
+    femaleRows: [
+      "94년생 1명",
+      "95년생 2명",
+      "97년생 3명",
+      "98년생 4명",
+      "00년생 4명",
+      "02년생 3명",
+      "05년생 3명"
+    ],
+    notes: [
+      "성비와 연령대는 신청 흐름에 맞춰 수시로 조율합니다.",
+      "지원현황은 노션 페이지에서 최신 기준으로 확인할 수 있습니다.",
+      "최종 참여자는 구글폼 확인 후 개별 안내합니다."
+    ]
+  },
   instagram: {
     handle: "@doyoulike.classic",
     url: "https://www.instagram.com/doyoulike.classic",
@@ -137,7 +166,7 @@ export function seedDatabase(db) {
       "최대 10:10",
       "92-06년생 남자 / 94-06년생 여자",
       "open",
-      "https://forms.gle/example-replace-before-launch",
+      "https://forms.gle/3jSCCw38u8auqJ7Y6",
       existingFeatured ? 0 : 1,
       1
     );

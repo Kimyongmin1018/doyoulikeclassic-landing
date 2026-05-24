@@ -149,7 +149,7 @@
         </label>
         <label class="admin-form-wide">
           참가비
-          <textarea name="priceRowsText" required>기본|40,000원|</textarea>
+          <textarea name="priceRowsText" required>기본|35,000원|</textarea>
         </label>
         <button class="button button-primary admin-form-wide" type="submit">새 일정 추가</button>
       </form>
@@ -180,6 +180,34 @@
       <label>
         참여자 예시
         <textarea name="participantsText" required maxlength="500"><%= adminContent.participantsText %></textarea>
+      </label>
+      <label class="admin-form-wide">
+        지원현황 노션 URL
+        <input name="applicationStatusUrl" value="<%= adminContent.applicationStatusUrl %>" required inputmode="url">
+      </label>
+      <label>
+        지원현황 기준 문구
+        <input name="applicationStatusUpdatedLabel" value="<%= adminContent.applicationStatusUpdatedLabel %>" required maxlength="80">
+      </label>
+      <label>
+        남자 지원 요약
+        <input name="applicationStatusMaleSummary" value="<%= adminContent.applicationStatusMaleSummary %>" required maxlength="40">
+      </label>
+      <label>
+        여자 지원 요약
+        <input name="applicationStatusFemaleSummary" value="<%= adminContent.applicationStatusFemaleSummary %>" required maxlength="40">
+      </label>
+      <label>
+        남자 연령대별 현황
+        <textarea name="applicationStatusMaleRowsText" required maxlength="1000"><%= adminContent.applicationStatusMaleRowsText %></textarea>
+      </label>
+      <label>
+        여자 연령대별 현황
+        <textarea name="applicationStatusFemaleRowsText" required maxlength="1000"><%= adminContent.applicationStatusFemaleRowsText %></textarea>
+      </label>
+      <label class="admin-form-wide">
+        지원현황 안내 문구
+        <textarea name="applicationStatusNotesText" required maxlength="800"><%= adminContent.applicationStatusNotesText %></textarea>
       </label>
       <label>
         인스타그램 URL

@@ -11,6 +11,15 @@ const ctaStates = {
 const contentFallbacks = {
   hero: { headline: "", subheadline: "", badges: [] },
   participants: [],
+  applicationStatus: {
+    url: "",
+    updatedLabel: "",
+    maleSummary: "",
+    femaleSummary: "",
+    maleRows: [],
+    femaleRows: [],
+    notes: []
+  },
   instagram: { handle: "", url: "", reels: [] },
   faq: [],
   legal: {}
@@ -24,6 +33,15 @@ const contentSchemas = {
     badges: z.array(z.string())
   }),
   participants: z.array(z.string()),
+  applicationStatus: z.object({
+    url: z.string(),
+    updatedLabel: z.string(),
+    maleSummary: z.string(),
+    femaleSummary: z.string(),
+    maleRows: z.array(z.string()),
+    femaleRows: z.array(z.string()),
+    notes: z.array(z.string())
+  }),
   instagram: z.object({
     handle: z.string(),
     url: z.string(),
@@ -82,11 +100,23 @@ function parseBlock(row, fallback, schema) {
 export function getContentBlocks(db) {
   const rows = db.prepare("select block_key, value_json from content_blocks").all();
   const byKey = Object.fromEntries(rows.map((row) => [row.block_key, row]));
+  const applicationStatus = parseBlock(
+    byKey.applicationStatus,
+    contentFallbacks.applicationStatus,
+    contentSchemas.applicationStatus
+  );
   const instagram = parseBlock(byKey.instagram, contentFallbacks.instagram, contentSchemas.instagram);
 
   return {
     hero: parseBlock(byKey.hero, contentFallbacks.hero, contentSchemas.hero),
     participants: parseBlock(byKey.participants, contentFallbacks.participants, contentSchemas.participants),
+    applicationStatus: {
+      ...applicationStatus,
+      url: normalizeHttpsUrl(applicationStatus.url),
+      maleRows: applicationStatus.maleRows.map((row) => row.trim()).filter(Boolean),
+      femaleRows: applicationStatus.femaleRows.map((row) => row.trim()).filter(Boolean),
+      notes: applicationStatus.notes.map((note) => note.trim()).filter(Boolean)
+    },
     instagram: {
       ...instagram,
       url: normalizeHttpsUrl(instagram.url),

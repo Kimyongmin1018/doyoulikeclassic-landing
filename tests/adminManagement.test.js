@@ -36,6 +36,13 @@ function contentPayload(overrides = {}) {
     heroSubheadline: "서울 강남권에서 만나는 취향 기반 로테이션 소개팅",
     heroBadgesText: "검증된 신청 폼\n선정자 개별 안내",
     participantsText: "피아니스트\n개발자\n교사",
+    applicationStatusUrl: "https://doyoulikeclassic.notion.site/status",
+    applicationStatusUpdatedLabel: "서울 강남권 7기 | 테스트 기준",
+    applicationStatusMaleSummary: "남자 12명",
+    applicationStatusFemaleSummary: "여자 14명",
+    applicationStatusMaleRowsText: "92년생 1명\n94년생 3명\n99년생 8명",
+    applicationStatusFemaleRowsText: "94년생 2명\n96년생 5명\n00년생 7명",
+    applicationStatusNotesText: "성비와 연령대는 수시 조율합니다.\n노션에서 최신 현황을 확인합니다.",
     instagramUrl: "https://www.instagram.com/doyoulike.classic",
     instagramHandle: "@doyoulike.classic",
     instagramReelsText: "https://www.instagram.com/reel/demo-one\nhttps://www.instagram.com/reel/demo-two",
@@ -184,7 +191,7 @@ describe("admin management", () => {
       .prepare("select label, amount from event_price_rows where event_id = ?")
       .get(eventRow.id);
     expect(timeSlot).toEqual({ label: "1회차", starts_at: "16:00", ends_at: "18:00" });
-    expect(priceRow).toEqual({ label: "기본", amount: "40,000원" });
+    expect(priceRow).toEqual({ label: "기본", amount: "35,000원" });
 
     const feature = await agent.post(`/admin/events/${eventRow.id}/feature`).send({ csrfToken });
     expect(feature.status).toBe(302);
@@ -293,7 +300,7 @@ describe("admin management", () => {
       csrfToken,
       publicTitle: "부분 업데이트되면 안 됨",
       timeSlotsText: "1회차|16:00|18:00",
-      priceRowsText: "기본|40,000원|",
+      priceRowsText: "기본|35,000원|",
       [fieldName]: fieldValue
     }));
 
@@ -380,6 +387,13 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("서울 강남권에서 만나는 취향 기반 로테이션 소개팅");
     expect(publicPage.text).toContain("검증된 신청 폼");
     expect(publicPage.text).toContain("피아니스트");
+    expect(publicPage.text).toContain("https://doyoulikeclassic.notion.site/status");
+    expect(publicPage.text).toContain("서울 강남권 7기 | 테스트 기준");
+    expect(publicPage.text).toContain("남자 12명");
+    expect(publicPage.text).toContain("여자 14명");
+    expect(publicPage.text).toContain("94년생 3명");
+    expect(publicPage.text).toContain("00년생 7명");
+    expect(publicPage.text).toContain("노션에서 최신 현황을 확인합니다.");
     expect(publicPage.text).toContain("https://www.instagram.com/doyoulike.classic");
     expect(publicPage.text).toContain("@doyoulike.classic");
     expect(publicPage.text).toContain("https://www.instagram.com/reel/demo-one");
@@ -403,10 +417,14 @@ describe("admin management", () => {
     const beforeInstagram = app.locals.db
       .prepare("select value_json from content_blocks where block_key = ?")
       .get("instagram");
+    const beforeApplicationStatus = app.locals.db
+      .prepare("select value_json from content_blocks where block_key = ?")
+      .get("applicationStatus");
 
     const response = await agent.post("/admin/content").send(contentPayload({
       csrfToken,
       heroHeadline: "업데이트되면 안 됨",
+      applicationStatusUrl: "http://doyoulikeclassic.notion.site/status",
       instagramUrl: "http://www.instagram.com/doyoulike.classic",
       instagramReelsText: "https://www.instagram.com/reel/demo-one"
     }));
@@ -418,5 +436,8 @@ describe("admin management", () => {
     expect(app.locals.db
       .prepare("select value_json from content_blocks where block_key = ?")
       .get("instagram")).toEqual(beforeInstagram);
+    expect(app.locals.db
+      .prepare("select value_json from content_blocks where block_key = ?")
+      .get("applicationStatus")).toEqual(beforeApplicationStatus);
   });
 });

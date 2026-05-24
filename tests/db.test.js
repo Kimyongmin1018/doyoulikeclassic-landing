@@ -36,10 +36,10 @@ describe("database", () => {
       { label: "2회차", starts_at: "18:30", ends_at: "20:30" }
     ]);
     expect(priceRows).toEqual([
-      { label: "기본", amount: "40,000원" },
-      { label: "동반 할인", amount: "32,000원" },
+      { label: "기본", amount: "35,000원" },
+      { label: "동반 할인", amount: "35,000원" },
       { label: "이전 기수 할인", amount: "35,000원" },
-      { label: "얼리버드 할인", amount: "33,000원" }
+      { label: "얼리버드 할인", amount: "35,000원" }
     ]);
   });
 
@@ -52,7 +52,7 @@ describe("database", () => {
       .all()
       .map((row) => row.block_key);
 
-    expect(blockKeys).toEqual(["faq", "hero", "instagram", "legal", "participants"]);
+    expect(blockKeys).toEqual(["applicationStatus", "faq", "hero", "instagram", "legal", "participants"]);
   });
 
   it("preserves admin edits to seeded event, child rows, and hero content when reseeded", () => {
@@ -145,20 +145,20 @@ describe("database", () => {
       {
         id: "classic-rotation-6-price-companion",
         label: "동반 할인",
-        amount: "32,000원",
-        note: "40,000원에서 32,000원으로 할인"
+        amount: "35,000원",
+        note: ""
       },
       {
         id: "classic-rotation-6-price-alumni",
         label: "이전 기수 할인",
         amount: "35,000원",
-        note: "40,000원에서 35,000원으로 할인"
+        note: ""
       },
       {
         id: "classic-rotation-6-price-early-bird",
         label: "얼리버드 할인",
-        amount: "33,000원",
-        note: "6/3까지 40,000원에서 33,000원으로 할인"
+        amount: "35,000원",
+        note: ""
       }
     ]);
   });
@@ -200,11 +200,11 @@ describe("database", () => {
     ).run("random-slot-2", "classic-rotation-6", "2회차", "18:30", "20:30", 2);
 
     [
-      ["random-price-base", "기본", "40,000원", "", 1],
-      ["random-price-base-copy", "기본", "40,000원", "", 1],
-      ["random-price-companion", "동반 할인", "32,000원", "40,000원에서 32,000원으로 할인", 2],
-      ["random-price-alumni", "이전 기수 할인", "35,000원", "40,000원에서 35,000원으로 할인", 3],
-      ["random-price-early-bird", "얼리버드 할인", "33,000원", "6/3까지 40,000원에서 33,000원으로 할인", 4]
+      ["random-price-base", "기본", "35,000원", "", 1],
+      ["random-price-base-copy", "기본", "35,000원", "", 1],
+      ["random-price-companion", "동반 할인", "35,000원", "", 2],
+      ["random-price-alumni", "이전 기수 할인", "35,000원", "", 3],
+      ["random-price-early-bird", "얼리버드 할인", "35,000원", "", 4]
     ].forEach(([id, label, amount, note, sortOrder]) => {
       db.prepare(
         "insert into event_price_rows (id, event_id, label, amount, note, sort_order) values (?, ?, ?, ?, ?, ?)"
@@ -238,26 +238,26 @@ describe("database", () => {
       {
         id: "classic-rotation-6-price-base",
         label: "기본",
-        amount: "40,000원",
+        amount: "35,000원",
         note: ""
       },
       {
         id: "classic-rotation-6-price-companion",
         label: "동반 할인",
-        amount: "32,000원",
-        note: "40,000원에서 32,000원으로 할인"
+        amount: "35,000원",
+        note: ""
       },
       {
         id: "classic-rotation-6-price-alumni",
         label: "이전 기수 할인",
         amount: "35,000원",
-        note: "40,000원에서 35,000원으로 할인"
+        note: ""
       },
       {
         id: "classic-rotation-6-price-early-bird",
         label: "얼리버드 할인",
-        amount: "33,000원",
-        note: "6/3까지 40,000원에서 33,000원으로 할인"
+        amount: "35,000원",
+        note: ""
       }
     ]);
     expect(timeSlots).toHaveLength(2);
@@ -276,10 +276,10 @@ describe("database", () => {
     ).run("random-slot-2", "classic-rotation-6", "2회차", "18:30", "20:30", 2);
 
     [
-      ["random-price-base", "기본", "40,000원", "", 1],
-      ["random-price-companion", "동반 할인", "32,000원", "40,000원에서 32,000원으로 할인", 2],
-      ["random-price-alumni", "이전 기수 할인", "35,000원", "40,000원에서 35,000원으로 할인", 3],
-      ["random-price-early-bird", "얼리버드 할인", "33,000원", "6/3까지 40,000원에서 33,000원으로 할인", 4]
+      ["random-price-base", "기본", "35,000원", "", 1],
+      ["random-price-companion", "동반 할인", "35,000원", "", 2],
+      ["random-price-alumni", "이전 기수 할인", "35,000원", "", 3],
+      ["random-price-early-bird", "얼리버드 할인", "35,000원", "", 4]
     ].forEach(([id, label, amount, note, sortOrder]) => {
       db.prepare(
         "insert into event_price_rows (id, event_id, label, amount, note, sort_order) values (?, ?, ?, ?, ?, ?)"
@@ -313,26 +313,26 @@ describe("database", () => {
       {
         id: "classic-rotation-6-price-base",
         label: "기본",
-        amount: "40,000원",
+        amount: "35,000원",
         note: ""
       },
       {
         id: "classic-rotation-6-price-companion",
         label: "동반 할인",
-        amount: "32,000원",
-        note: "40,000원에서 32,000원으로 할인"
+        amount: "35,000원",
+        note: ""
       },
       {
         id: "classic-rotation-6-price-alumni",
         label: "이전 기수 할인",
         amount: "35,000원",
-        note: "40,000원에서 35,000원으로 할인"
+        note: ""
       },
       {
         id: "classic-rotation-6-price-early-bird",
         label: "얼리버드 할인",
-        amount: "33,000원",
-        note: "6/3까지 40,000원에서 33,000원으로 할인"
+        amount: "35,000원",
+        note: ""
       }
     ]);
     expect(timeSlots).toHaveLength(2);

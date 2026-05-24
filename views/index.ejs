@@ -3,14 +3,29 @@
   const ctaHref = featuredEvent?.googleFormUrl || "";
   const ctaLabel = featuredEvent?.cta.label || "신청 오픈 예정";
   const canApply = Boolean(ctaHref);
+  const applicationStatus = model.content.applicationStatus;
+  const reelPreviewImages = [
+    "/assets/images/classic-salon-hero.jpg",
+    "/assets/images/rotation-conversation.jpg",
+    "/assets/images/classic-detail.jpg",
+    "/assets/images/classic-salon-hero.jpg"
+  ];
+  const reelPreviewCaptions = [
+    "처음 만나는 클래식 살롱의 공기",
+    "짧지만 깊게 이어지는 로테이션 대화",
+    "공연과 음악 취향으로 가까워지는 순간",
+    "서울 강남권에서 열리는 다음 만남"
+  ];
 %>
 
 <header class="site-header">
   <a class="wordmark" href="#top" aria-label="클래식을 좋아하세요 홈">클래식을 좋아하세요</a>
   <nav class="nav-links" aria-label="주요 섹션">
     <a href="#event">일정</a>
+    <a href="#application-status">지원현황</a>
     <a href="#why-classic">왜 클래식인가요</a>
     <a href="#process">진행 방식</a>
+    <a href="#instagram">Instagram</a>
     <a href="#faq">FAQ</a>
   </nav>
   <% if (canApply) { %>
@@ -26,7 +41,7 @@
     <div class="shape shape-coral" aria-hidden="true"></div>
     <div class="section-inner hero-grid">
       <div class="hero-copy reveal">
-        <p class="eyebrow"><%= model.content.hero.eyebrow || "국내 최초 클래식 로테이션 소개팅" %></p>
+        <p class="eyebrow hero-eyebrow"><%= model.content.hero.eyebrow || "국내 최초 클래식 로테이션 소개팅" %></p>
         <h1 id="hero-title"><%= model.content.hero.headline %></h1>
         <p class="hero-subtitle"><%= model.content.hero.subheadline %></p>
         <div class="badge-row" aria-label="주요 특징">
@@ -99,6 +114,59 @@
     </section>
   <% } %>
 
+  <section id="application-status" class="section application-status-section" aria-labelledby="application-status-title">
+    <div class="section-inner application-status-grid">
+      <div class="application-status-copy reveal">
+        <p class="eyebrow">Live Status</p>
+        <h2 id="application-status-title">지원현황을 확인하고 신청 타이밍을 잡아보세요.</h2>
+        <p class="section-copy">성별과 연령대 흐름은 로테이션 소개팅에서 가장 중요한 정보입니다. 최신 현황은 노션 페이지에서 운영자가 수시로 업데이트합니다.</p>
+        <div class="hero-actions">
+          <% if (applicationStatus.url) { %>
+            <a class="button button-primary" href="<%= applicationStatus.url %>" target="_blank" rel="noreferrer">지원현황 노션에서 보기</a>
+          <% } else { %>
+            <span class="button button-disabled" aria-disabled="true">지원현황 준비 중</span>
+          <% } %>
+          <a class="text-link" href="#event">모집 일정 보기</a>
+        </div>
+      </div>
+      <article class="status-board reveal" aria-label="현재 지원현황 요약">
+        <div class="status-board-header">
+          <span>모두의 신청현황</span>
+          <strong><%= applicationStatus.updatedLabel || "최신 지원현황 업데이트 예정" %></strong>
+        </div>
+        <div class="status-columns">
+          <section aria-label="남자 지원현황">
+            <div class="status-column-title">
+              <span>남자</span>
+              <strong><%= applicationStatus.maleSummary || "업데이트 예정" %></strong>
+            </div>
+            <ul class="status-age-list">
+              <% applicationStatus.maleRows.forEach((row) => { %>
+                <li><%= row %></li>
+              <% }) %>
+            </ul>
+          </section>
+          <section aria-label="여자 지원현황">
+            <div class="status-column-title">
+              <span>여자</span>
+              <strong><%= applicationStatus.femaleSummary || "업데이트 예정" %></strong>
+            </div>
+            <ul class="status-age-list">
+              <% applicationStatus.femaleRows.forEach((row) => { %>
+                <li><%= row %></li>
+              <% }) %>
+            </ul>
+          </section>
+        </div>
+        <ul class="status-note-list">
+          <% applicationStatus.notes.forEach((note) => { %>
+            <li><%= note %></li>
+          <% }) %>
+        </ul>
+      </article>
+    </div>
+  </section>
+
   <section id="why-classic" class="section why-section" aria-labelledby="why-title">
     <div class="section-inner split-grid">
       <div class="image-stack reveal">
@@ -159,23 +227,46 @@
     </div>
   </section>
 
-  <section class="section instagram-section" aria-labelledby="instagram-title">
-    <div class="section-inner">
-      <div class="section-heading-row">
-        <div>
-          <p class="eyebrow">Media</p>
-          <h2 id="instagram-title">현장 분위기는 Instagram에서 확인하세요.</h2>
+  <section id="instagram" class="section instagram-section" aria-labelledby="instagram-title">
+    <div class="section-inner instagram-shell">
+      <div class="instagram-profile reveal">
+        <div class="instagram-avatar" aria-hidden="true">
+          <img src="/assets/images/classic-detail.jpg" alt="">
         </div>
-        <% if (model.content.instagram.url) { %>
-          <a class="text-link" href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer"><%= model.content.instagram.handle %></a>
-        <% } %>
+        <div class="instagram-profile-copy">
+          <p class="eyebrow instagram-eyebrow">Instagram</p>
+          <h2 id="instagram-title">Instagram에서 먼저 만나는 클래식 살롱</h2>
+          <p>실제 모임 전후의 분위기, 클래식 취향 대화, 다음 모집 소식을 릴스처럼 빠르게 확인할 수 있습니다.</p>
+          <div class="instagram-meta" aria-label="인스타그램 계정 정보">
+            <span><strong><%= model.content.instagram.reels.length %></strong><small>Reels</small></span>
+            <span><strong>Seoul</strong><small>Gangnam</small></span>
+            <span><strong>Classic</strong><small>Rotation</small></span>
+          </div>
+        </div>
+        <div class="instagram-profile-action">
+          <strong><%= model.content.instagram.handle %></strong>
+          <% if (model.content.instagram.url) { %>
+            <a class="button button-white" href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer">Instagram에서 보기</a>
+          <% } %>
+        </div>
       </div>
-      <div class="reel-grid">
+
+      <div class="reel-grid instagram-feed" aria-label="Instagram Reels 미리보기">
         <% model.content.instagram.reels.forEach((url, index) => { %>
-          <a class="reel-card reveal" href="<%= url %>" target="_blank" rel="noreferrer">
-            <span>Instagram Reel</span>
-            <strong><%= String(index + 1).padStart(2, "0") %></strong>
-            <small>새 창으로 보기</small>
+          <a class="reel-card reveal" href="<%= url %>" target="_blank" rel="noreferrer" aria-label="Instagram Reel <%= String(index + 1).padStart(2, "0") %> 새 창으로 보기">
+            <img src="<%= reelPreviewImages[index % reelPreviewImages.length] %>" alt="<%= reelPreviewCaptions[index % reelPreviewCaptions.length] %>" loading="lazy">
+            <span class="reel-shade" aria-hidden="true"></span>
+            <span class="reel-badge">REELS</span>
+            <span class="reel-play" aria-hidden="true"></span>
+            <span class="reel-copy">
+              <small><%= model.content.instagram.handle %></small>
+              <strong><%= reelPreviewCaptions[index % reelPreviewCaptions.length] %></strong>
+            </span>
+            <span class="reel-actions" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
           </a>
         <% }) %>
       </div>
