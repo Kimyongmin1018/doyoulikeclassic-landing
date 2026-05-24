@@ -1,6 +1,8 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { attachAdmin, requireAdmin, requireCsrf } from "../middleware/adminAuth.js";
+import { getEventForAdmin, listEvents, updateEvent } from "../services/adminService.js";
+import { buildPublicModel } from "../services/publicModel.js";
 import { createSession, destroySession, safeCompareText } from "../services/security.js";
 
 export const adminRouter = Router();
@@ -30,6 +32,24 @@ function writeAuditLog(request, action, detail = "") {
   request.db
     .prepare("insert into admin_audit_log (action, detail, ip_address) values (?, ?, ?)")
     .run(action, detail, request.ip);
+}
+
+function renderDashboard(request, response, next, options = {}) {
+  const model = buildPublicModel(request.db);
+  const events = listEvents(request.db);
+
+  renderWithLayout(
+    response,
+    "admin-dashboard",
+    {
+      title: "관리자",
+      csrfToken: request.adminSession.csrf_token,
+      model,
+      events,
+      error: options.error || ""
+    },
+    next
+  );
 }
 
 adminRouter.use(attachAdmin);
@@ -83,13 +103,23 @@ adminRouter.post("/logout", requireAdmin, requireCsrf, (request, response) => {
 });
 
 adminRouter.get("/", requireAdmin, (request, response, next) => {
-  renderWithLayout(
-    response,
-    "admin-dashboard",
-    {
-      title: "관리자",
-      csrfToken: request.adminSession.csrf_token
-    },
-    next
-  );
+  renderDashboard(request, response, next);
+});
+
+adminRouter.post("/events/:id", requireAdmin, requireCsrf, (request, response, next) => {
+  const event = getEventForAdmin(request.db, request.params.id);
+
+  if (!event) {
+    response.status(404).send("Event not found");
+    return;
+  }
+
+  try {
+    updateEvent(request.db, request.params.id, request.body);
+    writeAuditLog(request, "event_updated", request.params.id);
+    response.redirect("/admin");
+  } catch (error) {
+    response.status(400);
+    renderDashboard(request, response, next, { error: error.message });
+  }
 });
