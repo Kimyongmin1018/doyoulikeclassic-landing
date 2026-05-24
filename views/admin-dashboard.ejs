@@ -18,7 +18,7 @@
   <section class="admin-grid" aria-label="행사 관리">
     <article class="admin-card">
       <h2>대표 모집 행사</h2>
-      <% const event = model.featuredEvent; %>
+      <% const event = adminFeaturedEvent; %>
       <% if (event) { %>
         <form method="post" action="/admin/events/<%= event.id %>" class="admin-form">
           <input type="hidden" name="csrfToken" value="<%= csrfToken %>">

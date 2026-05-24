@@ -29,6 +29,14 @@ function eventPayload(overrides = {}) {
   };
 }
 
+function expectInputValue(html, name, value) {
+  expect(html).toContain(`name="${name}" value="${value}"`);
+}
+
+function expectSelectedStatus(html, status) {
+  expect(html).toContain(`value="${status}" selected>${status}</option>`);
+}
+
 describe("admin management", () => {
   it("updates the featured event and renders the change publicly", async () => {
     const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
@@ -62,4 +70,52 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("클래식을 좋아하세요 6기");
     expect(publicPage.text).not.toContain("클래식을 좋아하세요 7기");
   });
+
+  it("keeps the featured event editable with its Google Form URL when hidden", async () => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+    const googleFormUrl = "https://forms.gle/hidden-admin-edit";
+
+    const update = await agent.post("/admin/events/classic-rotation-6").send(eventPayload({
+      csrfToken,
+      status: "hidden",
+      googleFormUrl
+    }));
+
+    expect(update.status).toBe(302);
+
+    const dashboard = await agent.get("/admin");
+    expect(dashboard.status).toBe(200);
+    expect(dashboard.text).toContain('action="/admin/events/classic-rotation-6"');
+    expectSelectedStatus(dashboard.text, "hidden");
+    expectInputValue(dashboard.text, "googleFormUrl", googleFormUrl);
+  });
+
+  it.each(["scheduled", "closed"])(
+    "preserves the Google Form URL for admin editing when %s while hiding the public apply href",
+    async (status) => {
+      const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+      const agent = request.agent(app);
+      const csrfToken = await login(agent);
+      const googleFormUrl = `https://forms.gle/${status}-admin-edit`;
+
+      const update = await agent.post("/admin/events/classic-rotation-6").send(eventPayload({
+        csrfToken,
+        status,
+        googleFormUrl
+      }));
+
+      expect(update.status).toBe(302);
+
+      const dashboard = await agent.get("/admin");
+      expect(dashboard.status).toBe(200);
+      expectSelectedStatus(dashboard.text, status);
+      expectInputValue(dashboard.text, "googleFormUrl", googleFormUrl);
+
+      const publicPage = await request(app).get("/");
+      expect(publicPage.status).toBe(200);
+      expect(publicPage.text).not.toContain(`href="${googleFormUrl}"`);
+    }
+  );
 });

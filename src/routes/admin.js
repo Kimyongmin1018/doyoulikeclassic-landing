@@ -1,7 +1,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { attachAdmin, requireAdmin, requireCsrf } from "../middleware/adminAuth.js";
-import { getEventForAdmin, listEvents, updateEvent } from "../services/adminService.js";
+import { getEventForAdmin, getFeaturedEventForAdmin, listEvents, updateEvent } from "../services/adminService.js";
 import { buildPublicModel } from "../services/publicModel.js";
 import { createSession, destroySession, safeCompareText } from "../services/security.js";
 
@@ -36,6 +36,7 @@ function writeAuditLog(request, action, detail = "") {
 
 function renderDashboard(request, response, next, options = {}) {
   const model = buildPublicModel(request.db);
+  const adminFeaturedEvent = getFeaturedEventForAdmin(request.db);
   const events = listEvents(request.db);
 
   renderWithLayout(
@@ -45,6 +46,7 @@ function renderDashboard(request, response, next, options = {}) {
       title: "관리자",
       csrfToken: request.adminSession.csrf_token,
       model,
+      adminFeaturedEvent,
       events,
       error: options.error || ""
     },

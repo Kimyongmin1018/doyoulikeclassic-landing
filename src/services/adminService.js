@@ -28,6 +28,30 @@ export function listEvents(db) {
   return db.prepare("select * from events order by is_featured desc, created_at desc").all();
 }
 
+function mapEventForAdmin(event) {
+  if (!event) return null;
+
+  return {
+    id: event.id,
+    publicTitle: event.public_title,
+    generationLabel: event.generation_label,
+    eventDate: event.event_date,
+    region: event.region,
+    venueNote: event.venue_note,
+    capacityNote: event.capacity_note,
+    applicationConditions: event.application_conditions,
+    status: event.status,
+    googleFormUrl: event.google_form_url,
+    isFeatured: Boolean(event.is_featured),
+    isVisible: Boolean(event.is_visible)
+  };
+}
+
+export function getFeaturedEventForAdmin(db) {
+  const event = db.prepare("select * from events where is_featured = 1 limit 1").get();
+  return mapEventForAdmin(event);
+}
+
 export function getEventForAdmin(db, id) {
   return db.prepare("select * from events where id = ?").get(id) || null;
 }
