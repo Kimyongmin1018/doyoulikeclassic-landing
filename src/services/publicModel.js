@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 const ctaStates = {
   open: { label: "이번 기수 신청하기", enabled: true },
   "closing-soon": { label: "마감 전 신청하기", enabled: true },
@@ -14,15 +16,37 @@ const contentFallbacks = {
   legal: {}
 };
 
+const contentSchemas = {
+  hero: z.object({
+    eyebrow: z.string().optional(),
+    headline: z.string(),
+    subheadline: z.string(),
+    badges: z.array(z.string())
+  }),
+  participants: z.array(z.string()),
+  instagram: z.object({
+    handle: z.string(),
+    url: z.string(),
+    reels: z.array(z.string())
+  }),
+  faq: z.array(z.object({
+    question: z.string(),
+    answer: z.string()
+  })),
+  legal: z.object({}).passthrough()
+};
+
 export function getCtaForStatus(status) {
   return ctaStates[status] || ctaStates.scheduled;
 }
 
-function parseBlock(row, fallback) {
+function parseBlock(row, fallback, schema) {
   if (!row) return fallback;
 
   try {
-    return JSON.parse(row.value_json);
+    const parsed = JSON.parse(row.value_json);
+    const result = schema.safeParse(parsed);
+    return result.success ? result.data : fallback;
   } catch {
     return fallback;
   }
@@ -33,11 +57,11 @@ export function getContentBlocks(db) {
   const byKey = Object.fromEntries(rows.map((row) => [row.block_key, row]));
 
   return {
-    hero: parseBlock(byKey.hero, contentFallbacks.hero),
-    participants: parseBlock(byKey.participants, contentFallbacks.participants),
-    instagram: parseBlock(byKey.instagram, contentFallbacks.instagram),
-    faq: parseBlock(byKey.faq, contentFallbacks.faq),
-    legal: parseBlock(byKey.legal, contentFallbacks.legal)
+    hero: parseBlock(byKey.hero, contentFallbacks.hero, contentSchemas.hero),
+    participants: parseBlock(byKey.participants, contentFallbacks.participants, contentSchemas.participants),
+    instagram: parseBlock(byKey.instagram, contentFallbacks.instagram, contentSchemas.instagram),
+    faq: parseBlock(byKey.faq, contentFallbacks.faq, contentSchemas.faq),
+    legal: parseBlock(byKey.legal, contentFallbacks.legal, contentSchemas.legal)
   };
 }
 
@@ -63,6 +87,7 @@ export function getFeaturedEvent(db) {
 
   if (!event) return null;
 
+  const cta = getCtaForStatus(event.status);
   const timeSlots = db.prepare(`
     select
       label,
@@ -93,8 +118,8 @@ export function getFeaturedEvent(db) {
     capacityNote: event.capacity_note,
     applicationConditions: event.application_conditions,
     status: event.status,
-    googleFormUrl: event.google_form_url,
-    cta: getCtaForStatus(event.status),
+    googleFormUrl: cta.enabled && event.google_form_url ? event.google_form_url : "",
+    cta,
     timeSlots,
     priceRows
   };
@@ -107,6 +132,6 @@ export function buildPublicModel(db) {
     serviceName: "클래식을 좋아하세요",
     featuredEvent,
     content: getContentBlocks(db),
-    hasOpenApplication: Boolean(featuredEvent?.cta.enabled && featuredEvent.googleFormUrl)
+    hasOpenApplication: Boolean(featuredEvent?.googleFormUrl)
   };
 }

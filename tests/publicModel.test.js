@@ -100,6 +100,18 @@ describe("public model", () => {
     expect(model.featuredEvent.timeSlots[0]).not.toHaveProperty("ends_at");
   });
 
+  it.each(["closed", "scheduled"])("does not expose application URLs for %s events", (status) => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+    db.prepare("update events set status = ? where id = ?").run(status, "classic-rotation-6");
+
+    const model = buildPublicModel(db);
+
+    expect(model.featuredEvent.cta.enabled).toBe(false);
+    expect(model.featuredEvent.googleFormUrl).toBe("");
+    expect(model.hasOpenApplication).toBe(false);
+  });
+
   it("uses safe content fallbacks when content is missing or malformed", () => {
     const db = createDatabase(":memory:");
     seedDatabase(db);
@@ -121,5 +133,42 @@ describe("public model", () => {
       faq: [],
       legal: expect.any(Object)
     });
+  });
+
+  it.each([
+    ["hero", null, { hero: { headline: "", subheadline: "", badges: [] } }],
+    ["hero", "headline", { hero: { headline: "", subheadline: "", badges: [] } }],
+    ["hero", [], { hero: { headline: "", subheadline: "", badges: [] } }],
+    ["hero", { headline: "Only headline" }, { hero: { headline: "", subheadline: "", badges: [] } }],
+    ["participants", null, { participants: [] }],
+    ["participants", "민지", { participants: [] }],
+    ["participants", {}, { participants: [] }],
+    ["participants", ["민지", 3], { participants: [] }],
+    ["instagram", null, { instagram: { handle: "", url: "", reels: [] } }],
+    ["instagram", "classic.rotation", { instagram: { handle: "", url: "", reels: [] } }],
+    ["instagram", [], { instagram: { handle: "", url: "", reels: [] } }],
+    ["instagram", {}, { instagram: { handle: "", url: "", reels: [] } }],
+    ["faq", null, { faq: [] }],
+    ["faq", "질문", { faq: [] }],
+    ["faq", {}, { faq: [] }],
+    ["faq", [{ question: "언제인가요?" }, "답변"], { faq: [] }],
+    ["legal", null, { legal: {} }],
+    ["legal", "법적 고지", { legal: {} }],
+    ["legal", [], { legal: {} }]
+  ])("falls back safely when %s content has wrong-but-valid JSON shape %#", (blockKey, value, expected) => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+    db.prepare("update content_blocks set value_json = ? where block_key = ?").run(JSON.stringify(value), blockKey);
+
+    expect(getContentBlocks(db)).toMatchObject(expected);
+  });
+
+  it("preserves legal content when it is an object", () => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+    const legal = { privacy: "개인정보 처리방침", terms: ["이용약관"] };
+    db.prepare("update content_blocks set value_json = ? where block_key = ?").run(JSON.stringify(legal), "legal");
+
+    expect(getContentBlocks(db).legal).toEqual(legal);
   });
 });
