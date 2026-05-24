@@ -74,6 +74,8 @@ const contentBlocks = {
 
 export function seedDatabase(db) {
   withTransaction(db, () => {
+    const existingFeatured = db.prepare("select 1 from events where is_featured = 1 limit 1").get();
+
     db.prepare(
       `
       insert into events (
@@ -81,19 +83,7 @@ export function seedDatabase(db) {
         venue_note, capacity_note, application_conditions, status, google_form_url,
         is_featured, is_visible
       ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      on conflict(id) do update set
-        public_title = excluded.public_title,
-        generation_label = excluded.generation_label,
-        event_date = excluded.event_date,
-        region = excluded.region,
-        venue_note = excluded.venue_note,
-        capacity_note = excluded.capacity_note,
-        application_conditions = excluded.application_conditions,
-        status = excluded.status,
-        google_form_url = excluded.google_form_url,
-        is_featured = excluded.is_featured,
-        is_visible = excluded.is_visible,
-        updated_at = datetime('now')
+      on conflict(id) do nothing
     `
     ).run(
       EVENT_ID,
@@ -107,37 +97,47 @@ export function seedDatabase(db) {
       "92-06년생 남자 / 94-06년생 여자",
       "open",
       "https://forms.gle/example-replace-before-launch",
-      1,
+      existingFeatured ? 0 : 1,
       1
     );
 
-    db.prepare("delete from event_time_slots where event_id = ?").run(EVENT_ID);
     const insertTimeSlot = db.prepare(
-      "insert into event_time_slots (id, event_id, label, starts_at, ends_at, sort_order) values (?, ?, ?, ?, ?, ?)"
+      `
+        insert into event_time_slots (id, event_id, label, starts_at, ends_at, sort_order)
+        select ?, ?, ?, ?, ?, ?
+        where exists (select 1 from events where id = ?)
+          and not exists (
+            select 1 from event_time_slots where event_id = ? and label = ?
+          )
+      `
     );
     timeSlots.forEach(([label, startsAt, endsAt, sortOrder]) => {
-      insertTimeSlot.run(nanoid(), EVENT_ID, label, startsAt, endsAt, sortOrder);
+      insertTimeSlot.run(nanoid(), EVENT_ID, label, startsAt, endsAt, sortOrder, EVENT_ID, EVENT_ID, label);
     });
 
-    db.prepare("delete from event_price_rows where event_id = ?").run(EVENT_ID);
     const insertPriceRow = db.prepare(
-      "insert into event_price_rows (id, event_id, label, amount, note, sort_order) values (?, ?, ?, ?, ?, ?)"
+      `
+        insert into event_price_rows (id, event_id, label, amount, note, sort_order)
+        select ?, ?, ?, ?, ?, ?
+        where exists (select 1 from events where id = ?)
+          and not exists (
+            select 1 from event_price_rows where event_id = ? and label = ?
+          )
+      `
     );
     priceRows.forEach(([label, amount, note, sortOrder]) => {
-      insertPriceRow.run(nanoid(), EVENT_ID, label, amount, note, sortOrder);
+      insertPriceRow.run(nanoid(), EVENT_ID, label, amount, note, sortOrder, EVENT_ID, EVENT_ID, label);
     });
 
-    const upsertContentBlock = db.prepare(
+    const insertContentBlock = db.prepare(
       `
         insert into content_blocks (block_key, value_json)
         values (?, ?)
-        on conflict(block_key) do update set
-          value_json = excluded.value_json,
-          updated_at = datetime('now')
+        on conflict(block_key) do nothing
       `
     );
     Object.entries(contentBlocks).forEach(([key, value]) => {
-      upsertContentBlock.run(key, JSON.stringify(value));
+      insertContentBlock.run(key, JSON.stringify(value));
     });
   });
 }

@@ -55,6 +55,70 @@ describe("database", () => {
     expect(blockKeys).toEqual(["faq", "hero", "instagram", "legal", "participants"]);
   });
 
+  it("preserves admin edits to seeded event, child rows, and hero content when reseeded", () => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+
+    const customHero = {
+      eyebrow: "관리자 수정",
+      headline: "관리자가 바꾼 히어로",
+      subheadline: "반복 시딩 후에도 유지되어야 합니다.",
+      badges: ["수정 유지"]
+    };
+
+    db.prepare(
+      "update events set public_title = ?, google_form_url = ? where id = ?"
+    ).run("관리자가 수정한 6기", "https://forms.gle/admin-managed", "classic-rotation-6");
+    db.prepare(
+      "update event_time_slots set starts_at = ?, ends_at = ? where event_id = ? and label = ?"
+    ).run("17:00", "19:00", "classic-rotation-6", "1회차");
+    db.prepare(
+      "update event_price_rows set amount = ?, note = ? where event_id = ? and label = ?"
+    ).run("45,000원", "관리자 가격", "classic-rotation-6", "기본");
+    db.prepare(
+      "update content_blocks set value_json = ? where block_key = ?"
+    ).run(JSON.stringify(customHero), "hero");
+
+    seedDatabase(db);
+
+    const event = db
+      .prepare("select public_title, google_form_url from events where id = ?")
+      .get("classic-rotation-6");
+    const timeSlot = db
+      .prepare("select starts_at, ends_at from event_time_slots where event_id = ? and label = ?")
+      .get("classic-rotation-6", "1회차");
+    const priceRow = db
+      .prepare("select amount, note from event_price_rows where event_id = ? and label = ?")
+      .get("classic-rotation-6", "기본");
+    const hero = db.prepare("select value_json from content_blocks where block_key = ?").get("hero");
+
+    expect(event).toEqual({
+      public_title: "관리자가 수정한 6기",
+      google_form_url: "https://forms.gle/admin-managed"
+    });
+    expect(timeSlot).toEqual({ starts_at: "17:00", ends_at: "19:00" });
+    expect(priceRow).toEqual({ amount: "45,000원", note: "관리자 가격" });
+    expect(JSON.parse(hero.value_json)).toEqual(customHero);
+  });
+
+  it("preserves an existing featured admin event when reseeded", () => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+
+    db.prepare("update events set is_featured = 0 where id = ?").run("classic-rotation-6");
+    db.prepare(
+      "insert into events (id, internal_name, public_title, generation_label, status, is_featured, is_visible) values (?, ?, ?, ?, ?, ?, ?)"
+    ).run("admin-featured", "admin-featured", "관리자 대표 이벤트", "7기 예정", "scheduled", 1, 1);
+
+    expect(() => seedDatabase(db)).not.toThrow();
+
+    const featured = db.prepare("select id from events where is_featured = 1").get();
+    const seeded = db.prepare("select is_featured from events where id = ?").get("classic-rotation-6");
+
+    expect(featured.id).toBe("admin-featured");
+    expect(seeded.is_featured).toBe(0);
+  });
+
   it("prevents more than one featured event", () => {
     const db = createDatabase(":memory:");
     seedDatabase(db);
