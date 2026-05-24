@@ -24,6 +24,9 @@ export function createApp(overrides = {}) {
 
   app.set("view engine", "ejs");
   app.set("views", path.join(rootDir, "views"));
+  if (config.nodeEnv === "production") {
+    app.set("trust proxy", 1);
+  }
   app.locals.config = config;
   app.locals.db = db;
   app.locals.serviceName = "클래식을 좋아하세요";
