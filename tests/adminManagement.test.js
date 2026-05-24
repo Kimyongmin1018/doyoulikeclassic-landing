@@ -31,7 +31,7 @@ function eventPayload(overrides = {}) {
 
 function contentPayload(overrides = {}) {
   return {
-    heroEyebrow: "서울 강남권 클래식 살롱",
+    heroEyebrow: "취향이 만나는 테스트 살롱",
     heroHeadline: "클래식으로 시작하는 새로운 인연",
     heroSubheadline: "서울 강남권에서 만나는 취향 기반 로테이션 소개팅",
     heroBadgesText: "검증된 신청 폼\n선정자 개별 안내",
@@ -40,11 +40,11 @@ function contentPayload(overrides = {}) {
     instagramHandle: "@doyoulike.classic",
     instagramReelsText: "https://www.instagram.com/reel/demo-one\nhttps://www.instagram.com/reel/demo-two",
     faqText: "신청은 어떻게 하나요?|구글폼으로 신청합니다.\n결제는 언제 하나요?|선정자에게 개별 안내합니다.",
-    businessName: "클래식을 좋아하세요",
-    representative: "대표자 입력 예정",
-    registrationNumber: "사업자등록번호 입력 예정",
+    businessName: "테스트 클래식 살롱",
+    representative: "홍길동",
+    registrationNumber: "123-45-67890",
     contact: "hello@doyoulikeclassic.com",
-    domain: "www.doyoulikeclassic.com",
+    domain: "demo.doyoulikeclassic.com",
     ...overrides
   };
 }
@@ -355,12 +355,22 @@ describe("admin management", () => {
 
     const publicPage = await request(app).get("/");
     expect(publicPage.status).toBe(200);
+    expect(publicPage.text).toContain("취향이 만나는 테스트 살롱");
     expect(publicPage.text).toContain("클래식으로 시작하는 새로운 인연");
+    expect(publicPage.text).toContain("서울 강남권에서 만나는 취향 기반 로테이션 소개팅");
     expect(publicPage.text).toContain("검증된 신청 폼");
     expect(publicPage.text).toContain("피아니스트");
+    expect(publicPage.text).toContain("https://www.instagram.com/doyoulike.classic");
+    expect(publicPage.text).toContain("@doyoulike.classic");
+    expect(publicPage.text).toContain("https://www.instagram.com/reel/demo-one");
+    expect(publicPage.text).toContain("https://www.instagram.com/reel/demo-two");
     expect(publicPage.text).toContain("신청은 어떻게 하나요?");
+    expect(publicPage.text).toContain("선정자에게 개별 안내합니다.");
     expect(publicPage.text).toContain("hello@doyoulikeclassic.com");
-    expect(publicPage.text).toContain("클래식을 좋아하세요");
+    expect(publicPage.text).toContain("demo.doyoulikeclassic.com");
+    expect(publicPage.text).toContain("테스트 클래식 살롱");
+    expect(publicPage.text).toContain("홍길동");
+    expect(publicPage.text).toContain("123-45-67890");
   });
 
   it("rejects unsafe landing content without partially updating blocks", async () => {
