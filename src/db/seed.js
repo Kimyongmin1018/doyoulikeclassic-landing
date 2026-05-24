@@ -1,19 +1,18 @@
-import { nanoid } from "nanoid";
 import { loadConfig } from "../config.js";
 import { createDatabase, withTransaction } from "./database.js";
 
 const EVENT_ID = "classic-rotation-6";
 
 const timeSlots = [
-  ["1회차", "16:00", "18:00", 1],
-  ["2회차", "18:30", "20:30", 2]
+  ["classic-rotation-6-slot-1", "1회차", "16:00", "18:00", 1],
+  ["classic-rotation-6-slot-2", "2회차", "18:30", "20:30", 2]
 ];
 
 const priceRows = [
-  ["기본", "40,000원", "", 1],
-  ["동반 할인", "32,000원", "40,000원에서 32,000원으로 할인", 2],
-  ["이전 기수 할인", "35,000원", "40,000원에서 35,000원으로 할인", 3],
-  ["얼리버드 할인", "33,000원", "6/3까지 40,000원에서 33,000원으로 할인", 4]
+  ["classic-rotation-6-price-base", "기본", "40,000원", "", 1],
+  ["classic-rotation-6-price-companion", "동반 할인", "32,000원", "40,000원에서 32,000원으로 할인", 2],
+  ["classic-rotation-6-price-alumni", "이전 기수 할인", "35,000원", "40,000원에서 35,000원으로 할인", 3],
+  ["classic-rotation-6-price-early-bird", "얼리버드 할인", "33,000원", "6/3까지 40,000원에서 33,000원으로 할인", 4]
 ];
 
 const contentBlocks = {
@@ -104,29 +103,23 @@ export function seedDatabase(db) {
     const insertTimeSlot = db.prepare(
       `
         insert into event_time_slots (id, event_id, label, starts_at, ends_at, sort_order)
-        select ?, ?, ?, ?, ?, ?
-        where exists (select 1 from events where id = ?)
-          and not exists (
-            select 1 from event_time_slots where event_id = ? and label = ?
-          )
+        values (?, ?, ?, ?, ?, ?)
+        on conflict(id) do nothing
       `
     );
-    timeSlots.forEach(([label, startsAt, endsAt, sortOrder]) => {
-      insertTimeSlot.run(nanoid(), EVENT_ID, label, startsAt, endsAt, sortOrder, EVENT_ID, EVENT_ID, label);
+    timeSlots.forEach(([id, label, startsAt, endsAt, sortOrder]) => {
+      insertTimeSlot.run(id, EVENT_ID, label, startsAt, endsAt, sortOrder);
     });
 
     const insertPriceRow = db.prepare(
       `
         insert into event_price_rows (id, event_id, label, amount, note, sort_order)
-        select ?, ?, ?, ?, ?, ?
-        where exists (select 1 from events where id = ?)
-          and not exists (
-            select 1 from event_price_rows where event_id = ? and label = ?
-          )
+        values (?, ?, ?, ?, ?, ?)
+        on conflict(id) do nothing
       `
     );
-    priceRows.forEach(([label, amount, note, sortOrder]) => {
-      insertPriceRow.run(nanoid(), EVENT_ID, label, amount, note, sortOrder, EVENT_ID, EVENT_ID, label);
+    priceRows.forEach(([id, label, amount, note, sortOrder]) => {
+      insertPriceRow.run(id, EVENT_ID, label, amount, note, sortOrder);
     });
 
     const insertContentBlock = db.prepare(

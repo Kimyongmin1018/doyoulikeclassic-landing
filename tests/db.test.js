@@ -101,6 +101,68 @@ describe("database", () => {
     expect(JSON.parse(hero.value_json)).toEqual(customHero);
   });
 
+  it("preserves renamed seeded child rows without recreating default labels when reseeded", () => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+
+    db.prepare(
+      "update event_time_slots set label = ?, starts_at = ?, ends_at = ? where id = ?"
+    ).run("관리자 수정 회차", "17:00", "19:00", "classic-rotation-6-slot-1");
+    db.prepare(
+      "update event_price_rows set label = ?, amount = ?, note = ? where id = ?"
+    ).run("관리자 수정 가격", "45,000원", "관리자 가격", "classic-rotation-6-price-base");
+
+    seedDatabase(db);
+
+    const timeSlots = db
+      .prepare("select id, label, starts_at, ends_at from event_time_slots where event_id = ? order by sort_order")
+      .all("classic-rotation-6");
+    const priceRows = db
+      .prepare("select id, label, amount, note from event_price_rows where event_id = ? order by sort_order")
+      .all("classic-rotation-6");
+
+    expect(timeSlots).toEqual([
+      {
+        id: "classic-rotation-6-slot-1",
+        label: "관리자 수정 회차",
+        starts_at: "17:00",
+        ends_at: "19:00"
+      },
+      {
+        id: "classic-rotation-6-slot-2",
+        label: "2회차",
+        starts_at: "18:30",
+        ends_at: "20:30"
+      }
+    ]);
+    expect(priceRows).toEqual([
+      {
+        id: "classic-rotation-6-price-base",
+        label: "관리자 수정 가격",
+        amount: "45,000원",
+        note: "관리자 가격"
+      },
+      {
+        id: "classic-rotation-6-price-companion",
+        label: "동반 할인",
+        amount: "32,000원",
+        note: "40,000원에서 32,000원으로 할인"
+      },
+      {
+        id: "classic-rotation-6-price-alumni",
+        label: "이전 기수 할인",
+        amount: "35,000원",
+        note: "40,000원에서 35,000원으로 할인"
+      },
+      {
+        id: "classic-rotation-6-price-early-bird",
+        label: "얼리버드 할인",
+        amount: "33,000원",
+        note: "6/3까지 40,000원에서 33,000원으로 할인"
+      }
+    ]);
+  });
+
   it("preserves an existing featured admin event when reseeded", () => {
     const db = createDatabase(":memory:");
     seedDatabase(db);
