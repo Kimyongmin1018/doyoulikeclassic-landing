@@ -1,0 +1,12 @@
+<main class="admin-shell">
+  <section class="admin-card">
+    <p class="eyebrow">Admin</p>
+    <h1>운영 대시보드</h1>
+    <p>신청자 개인정보는 구글폼에서 관리하고, 이 사이트는 행사와 콘텐츠 설정만 저장합니다.</p>
+    <form method="post" action="/admin/logout">
+      <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+      <button class="button button-disabled" type="submit">로그아웃</button>
+    </form>
+    <input type="hidden" id="csrf-token" value="<%= csrfToken %>">
+  </section>
+</main>

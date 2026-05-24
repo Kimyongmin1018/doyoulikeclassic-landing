@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { loadConfig } from "./config.js";
 import { createDatabase } from "./db/database.js";
 import { seedDatabase } from "./db/seed.js";
+import { adminRouter } from "./routes/admin.js";
 import { publicRouter } from "./routes/public.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,6 +39,7 @@ export function createApp(overrides = {}) {
     next();
   });
 
+  app.use("/admin", adminRouter);
   app.use("/", publicRouter);
 
   return app;

@@ -1,0 +1,14 @@
+<main class="admin-shell">
+  <form class="admin-card" method="post" action="/admin/login">
+    <p class="eyebrow">Admin</p>
+    <h1>관리자 로그인</h1>
+    <% if (error) { %>
+      <p class="form-error"><%= error %></p>
+    <% } %>
+    <label>
+      비밀번호
+      <input name="password" type="password" autocomplete="current-password" required>
+    </label>
+    <button class="button button-primary" type="submit">로그인</button>
+  </form>
+</main>
