@@ -71,6 +71,31 @@ const contentBlocks = {
   }
 };
 
+function migrateSeededChildRowIds(db, tableName, seededRows) {
+  const stableRowExists = db.prepare(`select 1 from ${tableName} where id = ?`);
+  const migrateLegacyRow = db.prepare(
+    `
+      update ${tableName}
+      set id = ?
+      where rowid = (
+        select rowid
+        from ${tableName}
+        where event_id = ?
+          and label = ?
+          and id <> ?
+        order by sort_order, rowid
+        limit 1
+      )
+    `
+  );
+
+  seededRows.forEach(([id, label]) => {
+    if (!stableRowExists.get(id)) {
+      migrateLegacyRow.run(id, EVENT_ID, label, id);
+    }
+  });
+}
+
 export function seedDatabase(db) {
   withTransaction(db, () => {
     const existingFeatured = db.prepare("select 1 from events where is_featured = 1 limit 1").get();
@@ -100,6 +125,8 @@ export function seedDatabase(db) {
       1
     );
 
+    migrateSeededChildRowIds(db, "event_time_slots", timeSlots);
+
     const insertTimeSlot = db.prepare(
       `
         insert into event_time_slots (id, event_id, label, starts_at, ends_at, sort_order)
@@ -110,6 +137,8 @@ export function seedDatabase(db) {
     timeSlots.forEach(([id, label, startsAt, endsAt, sortOrder]) => {
       insertTimeSlot.run(id, EVENT_ID, label, startsAt, endsAt, sortOrder);
     });
+
+    migrateSeededChildRowIds(db, "event_price_rows", priceRows);
 
     const insertPriceRow = db.prepare(
       `
