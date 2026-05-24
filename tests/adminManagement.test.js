@@ -118,4 +118,84 @@ describe("admin management", () => {
       expect(publicPage.text).not.toContain(`href="${googleFormUrl}"`);
     }
   );
+
+  it("creates a second schedule and can make it featured", async () => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+
+    const create = await agent.post("/admin/events").send(eventPayload({
+      csrfToken,
+      status: "scheduled",
+      googleFormUrl: "https://forms.gle/next"
+    }));
+
+    expect(create.status).toBe(302);
+
+    const eventRow = app.locals.db
+      .prepare("select id, is_featured, is_visible from events where public_title = ?")
+      .get("클래식을 좋아하세요 7기");
+    expect(eventRow).toMatchObject({ is_featured: 0, is_visible: 1 });
+
+    const timeSlot = app.locals.db
+      .prepare("select label, starts_at, ends_at from event_time_slots where event_id = ?")
+      .get(eventRow.id);
+    const priceRow = app.locals.db
+      .prepare("select label, amount from event_price_rows where event_id = ?")
+      .get(eventRow.id);
+    expect(timeSlot).toEqual({ label: "1회차", starts_at: "16:00", ends_at: "18:00" });
+    expect(priceRow).toEqual({ label: "기본", amount: "40,000원" });
+
+    const feature = await agent.post(`/admin/events/${eventRow.id}/feature`).send({ csrfToken });
+    expect(feature.status).toBe(302);
+
+    const publicPage = await request(app).get("/");
+    expect(publicPage.status).toBe(200);
+    expect(publicPage.text).toContain("클래식을 좋아하세요 7기");
+    expect(publicPage.text).toContain("신청 오픈 예정");
+  });
+
+  it("feature route preserves only one featured event", async () => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+
+    const create = await agent.post("/admin/events").send(eventPayload({ csrfToken }));
+    expect(create.status).toBe(302);
+
+    const eventRow = app.locals.db
+      .prepare("select id from events where public_title = ?")
+      .get("클래식을 좋아하세요 7기");
+    const feature = await agent.post(`/admin/events/${eventRow.id}/feature`).send({ csrfToken });
+    expect(feature.status).toBe(302);
+
+    const featured = app.locals.db
+      .prepare("select id from events where is_featured = 1")
+      .all();
+    const original = app.locals.db
+      .prepare("select is_featured from events where id = ?")
+      .get("classic-rotation-6");
+
+    expect(featured).toEqual([{ id: eventRow.id }]);
+    expect(original.is_featured).toBe(0);
+  });
+
+  it("requires CSRF for create and feature routes", async () => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+
+    const createWithoutCsrf = await agent.post("/admin/events").send(eventPayload());
+    expect(createWithoutCsrf.status).toBe(403);
+
+    const create = await agent.post("/admin/events").send(eventPayload({ csrfToken }));
+    expect(create.status).toBe(302);
+
+    const eventRow = app.locals.db
+      .prepare("select id from events where public_title = ?")
+      .get("클래식을 좋아하세요 7기");
+    const featureWithoutCsrf = await agent.post(`/admin/events/${eventRow.id}/feature`).send({});
+
+    expect(featureWithoutCsrf.status).toBe(403);
+  });
 });

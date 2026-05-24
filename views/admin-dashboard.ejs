@@ -75,12 +75,67 @@
       <h2>등록된 일정</h2>
       <div class="admin-list">
         <% events.forEach((item) => { %>
-          <p>
-            <strong><%= item.public_title %></strong>
-            <span><%= item.event_date || "날짜 미정" %> · <%= item.status %> · <%= item.is_featured ? "대표" : "보관" %></span>
-          </p>
+          <div class="admin-list-item">
+            <p>
+              <strong><%= item.public_title %></strong>
+              <span><%= item.event_date || "날짜 미정" %> · <%= item.status %> · <%= item.is_featured ? "대표" : "보관" %></span>
+            </p>
+            <% if (!item.is_featured) { %>
+              <form method="post" action="/admin/events/<%= item.id %>/feature">
+                <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+                <button class="button button-disabled" type="submit">대표 지정</button>
+              </form>
+            <% } %>
+          </div>
         <% }) %>
       </div>
+
+      <form method="post" action="/admin/events" class="admin-form compact-form" aria-label="새 일정 추가">
+        <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+        <label>
+          공개 제목
+          <input name="publicTitle" placeholder="새 일정 제목" required maxlength="80">
+        </label>
+        <label>
+          기수 라벨
+          <input name="generationLabel" placeholder="기수 라벨" required maxlength="40">
+        </label>
+        <label>
+          날짜
+          <input name="eventDate" placeholder="날짜" required maxlength="40">
+        </label>
+        <label>
+          지역
+          <input name="region" value="서울 강남권" required maxlength="40">
+        </label>
+        <label>
+          장소 안내
+          <input name="venueNote" value="참여 확정자 개별 안내" required maxlength="120">
+        </label>
+        <label>
+          정원
+          <input name="capacityNote" value="최대 10:10" required maxlength="60">
+        </label>
+        <label class="admin-form-wide">
+          신청 조건
+          <input name="applicationConditions" placeholder="신청 조건" required maxlength="120">
+        </label>
+        <label>
+          모집 상태
+          <select name="status">
+            <option value="scheduled">scheduled</option>
+            <option value="open">open</option>
+            <option value="closing-soon">closing-soon</option>
+            <option value="closed">closed</option>
+            <option value="hidden">hidden</option>
+          </select>
+        </label>
+        <label>
+          구글폼 링크
+          <input name="googleFormUrl" value="https://forms.gle/demo" required inputmode="url">
+        </label>
+        <button class="button button-primary admin-form-wide" type="submit">새 일정 추가</button>
+      </form>
     </article>
   </section>
 </main>

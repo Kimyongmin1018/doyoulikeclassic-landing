@@ -1,7 +1,14 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { attachAdmin, requireAdmin, requireCsrf } from "../middleware/adminAuth.js";
-import { getEventForAdmin, getFeaturedEventForAdmin, listEvents, updateEvent } from "../services/adminService.js";
+import {
+  createEvent,
+  featureEvent,
+  getEventForAdmin,
+  getFeaturedEventForAdmin,
+  listEvents,
+  updateEvent
+} from "../services/adminService.js";
 import { buildPublicModel } from "../services/publicModel.js";
 import { createSession, destroySession, safeCompareText } from "../services/security.js";
 
@@ -108,6 +115,17 @@ adminRouter.get("/", requireAdmin, (request, response, next) => {
   renderDashboard(request, response, next);
 });
 
+adminRouter.post("/events", requireAdmin, requireCsrf, (request, response, next) => {
+  try {
+    const id = createEvent(request.db, request.body);
+    writeAuditLog(request, "event_created", id);
+    response.redirect("/admin");
+  } catch (error) {
+    response.status(400);
+    renderDashboard(request, response, next, { error: error.message });
+  }
+});
+
 adminRouter.post("/events/:id", requireAdmin, requireCsrf, (request, response, next) => {
   const event = getEventForAdmin(request.db, request.params.id);
 
@@ -124,4 +142,16 @@ adminRouter.post("/events/:id", requireAdmin, requireCsrf, (request, response, n
     response.status(400);
     renderDashboard(request, response, next, { error: error.message });
   }
+});
+
+adminRouter.post("/events/:id/feature", requireAdmin, requireCsrf, (request, response) => {
+  const ok = featureEvent(request.db, request.params.id);
+
+  if (!ok) {
+    response.status(404).send("Event not found");
+    return;
+  }
+
+  writeAuditLog(request, "event_featured", request.params.id);
+  response.redirect("/admin");
 });

@@ -939,14 +939,21 @@ dd {
   gap: 12px;
 }
 
-.admin-list p {
+.admin-list-item {
   display: grid;
-  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(17, 17, 24, 0.12);
 }
 
-.admin-list p:last-child {
+.admin-list p {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-list-item:last-child {
   padding-bottom: 0;
   border-bottom: 0;
 }
@@ -956,10 +963,17 @@ dd {
   color: rgba(17, 17, 24, 0.72);
 }
 
+.compact-form {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(17, 17, 24, 0.12);
+}
+
 @media (max-width: 820px) {
   .admin-topbar,
   .admin-grid,
-  .admin-form {
+  .admin-form,
+  .admin-list-item {
     display: grid;
     grid-template-columns: 1fr;
   }

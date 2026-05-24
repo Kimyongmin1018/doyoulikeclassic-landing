@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { z } from "zod";
 
 const httpsUrl = z
@@ -85,4 +86,58 @@ export function updateEvent(db, id, input) {
   );
 
   return result.changes === 1;
+}
+
+export function createEvent(db, input) {
+  const data = eventInputSchema.parse(input);
+  const id = nanoid();
+
+  db.transaction(() => {
+    db.prepare(`
+      insert into events (
+        id, internal_name, public_title, generation_label, event_date, region, venue_note,
+        capacity_note, application_conditions, status, google_form_url, is_featured, is_visible
+      ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1)
+    `).run(
+      id,
+      `admin-${id}`,
+      data.publicTitle,
+      data.generationLabel,
+      data.eventDate,
+      data.region,
+      data.venueNote,
+      data.capacityNote,
+      data.applicationConditions,
+      data.status,
+      data.googleFormUrl
+    );
+
+    db.prepare(`
+      insert into event_time_slots (id, event_id, label, starts_at, ends_at, sort_order)
+      values (?, ?, ?, ?, ?, ?)
+    `).run(nanoid(), id, "1회차", "16:00", "18:00", 1);
+
+    db.prepare(`
+      insert into event_price_rows (id, event_id, label, amount, sort_order)
+      values (?, ?, ?, ?, ?)
+    `).run(nanoid(), id, "기본", "40,000원", 1);
+  })();
+
+  return id;
+}
+
+export function featureEvent(db, id) {
+  return db.transaction(() => {
+    const event = db.prepare("select 1 from events where id = ?").get(id);
+    if (!event) return false;
+
+    db.prepare("update events set is_featured = 0, updated_at = datetime('now')").run();
+    const result = db.prepare(`
+      update events
+      set is_featured = 1, is_visible = 1, updated_at = datetime('now')
+      where id = ?
+    `).run(id);
+
+    return result.changes === 1;
+  })();
 }
