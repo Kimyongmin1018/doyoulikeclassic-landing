@@ -17,79 +17,88 @@
 
   <section class="admin-grid" aria-label="행사 관리">
     <article class="admin-card">
-      <h2>대표 모집 행사</h2>
-      <% const event = adminFeaturedEvent; %>
-      <% if (event) { %>
-        <form method="post" action="/admin/events/<%= event.id %>" class="admin-form">
-          <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+      <h2>등록된 일정 편집</h2>
+      <% if (events.length) { %>
+        <div class="admin-event-stack">
+          <% events.forEach((event) => { %>
+            <section class="admin-event-editor" aria-labelledby="event-editor-<%= event.id %>">
+              <div class="admin-list-item">
+                <p>
+                  <strong id="event-editor-<%= event.id %>"><%= event.publicTitle %></strong>
+                  <span><%= event.eventDate || "날짜 미정" %> · <%= event.status %> · <%= event.isFeatured ? "대표" : "보관" %></span>
+                </p>
+                <% if (!event.isFeatured) { %>
+                  <form method="post" action="/admin/events/<%= event.id %>/feature">
+                    <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+                    <button class="button button-disabled" type="submit">대표 지정</button>
+                  </form>
+                <% } %>
+              </div>
 
-          <label>
-            공개 제목
-            <input name="publicTitle" value="<%= event.publicTitle %>" required maxlength="80">
-          </label>
-          <label>
-            기수 라벨
-            <input name="generationLabel" value="<%= event.generationLabel %>" required maxlength="40">
-          </label>
-          <label>
-            날짜
-            <input name="eventDate" value="<%= event.eventDate %>" required maxlength="40">
-          </label>
-          <label>
-            지역
-            <input name="region" value="<%= event.region %>" required maxlength="40">
-          </label>
-          <label>
-            장소 안내
-            <input name="venueNote" value="<%= event.venueNote %>" required maxlength="120">
-          </label>
-          <label>
-            정원
-            <input name="capacityNote" value="<%= event.capacityNote %>" required maxlength="60">
-          </label>
-          <label class="admin-form-wide">
-            신청 조건
-            <input name="applicationConditions" value="<%= event.applicationConditions %>" required maxlength="120">
-          </label>
-          <label>
-            모집 상태
-            <select name="status">
-              <% ["open", "closing-soon", "closed", "scheduled", "hidden"].forEach((status) => { %>
-                <option value="<%= status %>" <%= event.status === status ? "selected" : "" %>><%= status %></option>
-              <% }) %>
-            </select>
-          </label>
-          <label>
-            구글폼 링크
-            <input name="googleFormUrl" value="<%= event.googleFormUrl %>" required inputmode="url">
-          </label>
+              <form method="post" action="/admin/events/<%= event.id %>" class="admin-form">
+                <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
 
-          <button class="button button-primary admin-form-wide" type="submit">행사 저장</button>
-        </form>
+                <label>
+                  공개 제목
+                  <input name="publicTitle" value="<%= event.publicTitle %>" required maxlength="80">
+                </label>
+                <label>
+                  기수 라벨
+                  <input name="generationLabel" value="<%= event.generationLabel %>" required maxlength="40">
+                </label>
+                <label>
+                  날짜
+                  <input name="eventDate" value="<%= event.eventDate %>" required maxlength="40">
+                </label>
+                <label>
+                  지역
+                  <input name="region" value="<%= event.region %>" required maxlength="40">
+                </label>
+                <label>
+                  장소 안내
+                  <input name="venueNote" value="<%= event.venueNote %>" required maxlength="120">
+                </label>
+                <label>
+                  정원
+                  <input name="capacityNote" value="<%= event.capacityNote %>" required maxlength="60">
+                </label>
+                <label class="admin-form-wide">
+                  신청 조건
+                  <input name="applicationConditions" value="<%= event.applicationConditions %>" required maxlength="120">
+                </label>
+                <label>
+                  모집 상태
+                  <select name="status">
+                    <% ["open", "closing-soon", "closed", "scheduled", "hidden"].forEach((status) => { %>
+                      <option value="<%= status %>" <%= event.status === status ? "selected" : "" %>><%= status %></option>
+                    <% }) %>
+                  </select>
+                </label>
+                <label>
+                  구글폼 링크
+                  <input name="googleFormUrl" value="<%= event.googleFormUrl %>" required inputmode="url">
+                </label>
+                <label class="admin-form-wide">
+                  시간 슬롯
+                  <textarea name="timeSlotsText" required><%= event.timeSlotsText %></textarea>
+                </label>
+                <label class="admin-form-wide">
+                  참가비
+                  <textarea name="priceRowsText" required><%= event.priceRowsText %></textarea>
+                </label>
+
+                <button class="button button-primary admin-form-wide" type="submit">행사 저장</button>
+              </form>
+            </section>
+          <% }) %>
+        </div>
       <% } else { %>
-        <p class="admin-empty">표시 중인 대표 행사가 없습니다.</p>
+        <p class="admin-empty">등록된 일정이 없습니다.</p>
       <% } %>
     </article>
 
     <article class="admin-card">
-      <h2>등록된 일정</h2>
-      <div class="admin-list">
-        <% events.forEach((item) => { %>
-          <div class="admin-list-item">
-            <p>
-              <strong><%= item.public_title %></strong>
-              <span><%= item.event_date || "날짜 미정" %> · <%= item.status %> · <%= item.is_featured ? "대표" : "보관" %></span>
-            </p>
-            <% if (!item.is_featured) { %>
-              <form method="post" action="/admin/events/<%= item.id %>/feature">
-                <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
-                <button class="button button-disabled" type="submit">대표 지정</button>
-              </form>
-            <% } %>
-          </div>
-        <% }) %>
-      </div>
-
+      <h2>새 일정 추가</h2>
       <form method="post" action="/admin/events" class="admin-form compact-form" aria-label="새 일정 추가">
         <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
         <label>
@@ -133,6 +142,14 @@
         <label>
           구글폼 링크
           <input name="googleFormUrl" value="https://forms.gle/demo" required inputmode="url">
+        </label>
+        <label class="admin-form-wide">
+          시간 슬롯
+          <textarea name="timeSlotsText" required>1회차|16:00|18:00</textarea>
+        </label>
+        <label class="admin-form-wide">
+          참가비
+          <textarea name="priceRowsText" required>기본|40,000원|</textarea>
         </label>
         <button class="button button-primary admin-form-wide" type="submit">새 일정 추가</button>
       </form>

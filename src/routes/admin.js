@@ -5,7 +5,6 @@ import {
   createEvent,
   featureEvent,
   getEventForAdmin,
-  getFeaturedEventForAdmin,
   listEvents,
   updateEvent
 } from "../services/adminService.js";
@@ -17,6 +16,7 @@ export const adminRouter = Router();
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
+  skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -43,7 +43,6 @@ function writeAuditLog(request, action, detail = "") {
 
 function renderDashboard(request, response, next, options = {}) {
   const model = buildPublicModel(request.db);
-  const adminFeaturedEvent = getFeaturedEventForAdmin(request.db);
   const events = listEvents(request.db);
 
   renderWithLayout(
@@ -53,7 +52,6 @@ function renderDashboard(request, response, next, options = {}) {
       title: "관리자",
       csrfToken: request.adminSession.csrf_token,
       model,
-      adminFeaturedEvent,
       events,
       error: options.error || ""
     },

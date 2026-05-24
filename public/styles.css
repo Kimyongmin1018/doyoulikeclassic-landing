@@ -934,6 +934,22 @@ dd {
   grid-column: 1 / -1;
 }
 
+.admin-event-stack,
+.admin-event-editor {
+  display: grid;
+  gap: 20px;
+}
+
+.admin-event-editor {
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(17, 17, 24, 0.12);
+}
+
+.admin-event-editor:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
 .admin-list {
   display: grid;
   gap: 12px;

@@ -155,6 +155,125 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("신청 오픈 예정");
   });
 
+  it("updates a non-featured schedule while keeping the original featured event public", async () => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+
+    const create = await agent.post("/admin/events").send(eventPayload({
+      csrfToken,
+      status: "scheduled",
+      googleFormUrl: "https://forms.gle/next"
+    }));
+    expect(create.status).toBe(302);
+
+    const eventRow = app.locals.db
+      .prepare("select id from events where public_title = ?")
+      .get("클래식을 좋아하세요 7기");
+
+    const update = await agent.post(`/admin/events/${eventRow.id}`).send(eventPayload({
+      csrfToken,
+      publicTitle: "클래식을 좋아하세요 7기 수정",
+      status: "scheduled",
+      googleFormUrl: "https://forms.gle/next-edited"
+    }));
+    expect(update.status).toBe(302);
+
+    const publicPage = await request(app).get("/");
+    expect(publicPage.status).toBe(200);
+    expect(publicPage.text).toContain("클래식을 좋아하세요 6기");
+    expect(publicPage.text).not.toContain("클래식을 좋아하세요 7기 수정");
+
+    const dashboard = await agent.get("/admin");
+    expect(dashboard.status).toBe(200);
+    expect(dashboard.text).toContain("클래식을 좋아하세요 7기 수정");
+    expect(dashboard.text).toContain(`action="/admin/events/${eventRow.id}"`);
+  });
+
+  it("updates editable time slots and price rows before featuring an event", async () => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+
+    const create = await agent.post("/admin/events").send(eventPayload({
+      csrfToken,
+      status: "scheduled",
+      googleFormUrl: "https://forms.gle/next"
+    }));
+    expect(create.status).toBe(302);
+
+    const eventRow = app.locals.db
+      .prepare("select id from events where public_title = ?")
+      .get("클래식을 좋아하세요 7기");
+
+    const update = await agent.post(`/admin/events/${eventRow.id}`).send(eventPayload({
+      csrfToken,
+      publicTitle: "클래식을 좋아하세요 7기",
+      status: "open",
+      timeSlotsText: "오후|15:00|17:00\n저녁|19:00|21:00",
+      priceRowsText: "얼리버드|35,000원|5월 한정\n기본|45,000원|"
+    }));
+    expect(update.status).toBe(302);
+
+    const feature = await agent.post(`/admin/events/${eventRow.id}/feature`).send({ csrfToken });
+    expect(feature.status).toBe(302);
+
+    const publicPage = await request(app).get("/");
+    expect(publicPage.status).toBe(200);
+    expect(publicPage.text).toContain("오후");
+    expect(publicPage.text).toContain("15:00-17:00");
+    expect(publicPage.text).toContain("저녁");
+    expect(publicPage.text).toContain("19:00-21:00");
+    expect(publicPage.text).toContain("얼리버드");
+    expect(publicPage.text).toContain("35,000원");
+    expect(publicPage.text).toContain("5월 한정");
+    expect(publicPage.text).toContain("기본");
+    expect(publicPage.text).toContain("45,000원");
+  });
+
+  it.each([
+    ["timeSlotsText", "라벨만|16:00"],
+    ["priceRowsText", "기본||"]
+  ])("rejects malformed %s without partially updating event or children", async (fieldName, fieldValue) => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+
+    const beforeEvent = app.locals.db
+      .prepare("select public_title from events where id = ?")
+      .get("classic-rotation-6");
+    const beforeSlots = app.locals.db
+      .prepare("select label, starts_at, ends_at, sort_order from event_time_slots where event_id = ? order by sort_order")
+      .all("classic-rotation-6");
+    const beforePrices = app.locals.db
+      .prepare("select label, amount, note, sort_order from event_price_rows where event_id = ? order by sort_order")
+      .all("classic-rotation-6");
+
+    const update = await agent.post("/admin/events/classic-rotation-6").send(eventPayload({
+      csrfToken,
+      publicTitle: "부분 업데이트되면 안 됨",
+      timeSlotsText: "1회차|16:00|18:00",
+      priceRowsText: "기본|40,000원|",
+      [fieldName]: fieldValue
+    }));
+
+    expect(update.status).toBe(400);
+
+    const afterEvent = app.locals.db
+      .prepare("select public_title from events where id = ?")
+      .get("classic-rotation-6");
+    const afterSlots = app.locals.db
+      .prepare("select label, starts_at, ends_at, sort_order from event_time_slots where event_id = ? order by sort_order")
+      .all("classic-rotation-6");
+    const afterPrices = app.locals.db
+      .prepare("select label, amount, note, sort_order from event_price_rows where event_id = ? order by sort_order")
+      .all("classic-rotation-6");
+
+    expect(afterEvent).toEqual(beforeEvent);
+    expect(afterSlots).toEqual(beforeSlots);
+    expect(afterPrices).toEqual(beforePrices);
+  });
+
   it("feature route preserves only one featured event", async () => {
     const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
     const agent = request.agent(app);
