@@ -50,6 +50,19 @@ function normalizeHttpsUrl(value) {
   }
 }
 
+function normalizeGoogleFormUrl(value) {
+  const url = normalizeHttpsUrl(value);
+  if (!url) return "";
+
+  const { hostname, pathname } = new URL(url);
+  const normalizedHost = hostname.toLowerCase();
+
+  if (normalizedHost === "forms.gle") return url;
+  if (normalizedHost === "docs.google.com" && pathname.startsWith("/forms/")) return url;
+
+  return "";
+}
+
 export function getCtaForStatus(status) {
   return ctaStates[status] || ctaStates.scheduled;
 }
@@ -137,7 +150,7 @@ export function getFeaturedEvent(db) {
     capacityNote: event.capacity_note,
     applicationConditions: event.application_conditions,
     status: event.status,
-    googleFormUrl: cta.enabled ? normalizeHttpsUrl(event.google_form_url) : "",
+    googleFormUrl: cta.enabled ? normalizeGoogleFormUrl(event.google_form_url) : "",
     cta,
     timeSlots,
     priceRows

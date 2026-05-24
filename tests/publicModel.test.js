@@ -115,6 +115,7 @@ describe("public model", () => {
   it.each([
     ["javascript URL", "javascript:alert(1)"],
     ["http URL", "http://forms.gle/insecure"],
+    ["non-Google HTTPS URL", "https://example.com/not-google-form"],
     ["relative URL", "/apply"],
     ["malformed URL", "https://[broken"]
   ])("does not expose unsafe application URLs for %s", (_caseName, googleFormUrl) => {
@@ -126,6 +127,20 @@ describe("public model", () => {
 
     expect(model.featuredEvent.googleFormUrl).toBe("");
     expect(model.hasOpenApplication).toBe(false);
+  });
+
+  it.each([
+    "https://forms.gle/example",
+    "https://docs.google.com/forms/d/e/example/viewform"
+  ])("exposes Google Forms application URLs for %s", (googleFormUrl) => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+    db.prepare("update events set google_form_url = ? where id = ?").run(googleFormUrl, "classic-rotation-6");
+
+    const model = buildPublicModel(db);
+
+    expect(model.featuredEvent.googleFormUrl).toBe(googleFormUrl);
+    expect(model.hasOpenApplication).toBe(true);
   });
 
   it("uses safe content fallbacks when content is missing or malformed", () => {

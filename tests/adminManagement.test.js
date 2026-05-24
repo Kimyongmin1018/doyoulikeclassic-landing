@@ -74,14 +74,17 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("마감 전 신청하기");
   });
 
-  it("rejects non-https Google Form URLs", async () => {
+  it.each([
+    ["non-https URL", "http://forms.gle/demo"],
+    ["non-Google Forms HTTPS URL", "https://example.com/not-google-form"]
+  ])("rejects %s for Google Form URLs", async (_caseName, googleFormUrl) => {
     const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
     const agent = request.agent(app);
     const csrfToken = await login(agent);
 
     const update = await agent.post("/admin/events/classic-rotation-6").send(eventPayload({
       csrfToken,
-      googleFormUrl: "http://forms.gle/demo"
+      googleFormUrl
     }));
 
     expect(update.status).toBe(400);
@@ -89,6 +92,23 @@ describe("admin management", () => {
     const publicPage = await request(app).get("/");
     expect(publicPage.text).toContain("클래식을 좋아하세요 6기");
     expect(publicPage.text).not.toContain("클래식을 좋아하세요 7기");
+  });
+
+  it("accepts docs.google.com Google Form URLs", async () => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+    const googleFormUrl = "https://docs.google.com/forms/d/e/demo/viewform";
+
+    const update = await agent.post("/admin/events/classic-rotation-6").send(eventPayload({
+      csrfToken,
+      googleFormUrl
+    }));
+
+    expect(update.status).toBe(302);
+
+    const publicPage = await request(app).get("/");
+    expect(publicPage.text).toContain(`href="${googleFormUrl}"`);
   });
 
   it("keeps the featured event editable with its Google Form URL when hidden", async () => {

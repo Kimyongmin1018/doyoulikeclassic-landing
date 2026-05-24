@@ -13,6 +13,13 @@ const httpsUrl = z
     }
   }, "https URL만 사용할 수 있습니다.");
 
+const googleFormUrl = httpsUrl.refine((value) => {
+  const url = new URL(value);
+  const hostname = url.hostname.toLowerCase();
+
+  return hostname === "forms.gle" || (hostname === "docs.google.com" && url.pathname.startsWith("/forms/"));
+}, "구글폼 URL만 사용할 수 있습니다.");
+
 export const eventInputSchema = z.object({
   publicTitle: z.string().trim().min(1).max(80),
   generationLabel: z.string().trim().min(1).max(40),
@@ -22,7 +29,7 @@ export const eventInputSchema = z.object({
   capacityNote: z.string().trim().min(1).max(60),
   applicationConditions: z.string().trim().min(1).max(120),
   status: z.enum(["open", "closing-soon", "closed", "scheduled", "hidden"]),
-  googleFormUrl: httpsUrl,
+  googleFormUrl,
   timeSlotsText: z.string().optional(),
   priceRowsText: z.string().optional()
 });
