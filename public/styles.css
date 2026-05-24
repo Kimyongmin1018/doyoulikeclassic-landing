@@ -985,6 +985,11 @@ dd {
   border-top: 1px solid rgba(17, 17, 24, 0.12);
 }
 
+.content-editor {
+  width: min(1120px, 100%);
+  margin: 24px auto 0;
+}
+
 @media (max-width: 820px) {
   .admin-topbar,
   .admin-grid,

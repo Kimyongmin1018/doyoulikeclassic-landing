@@ -27,6 +27,23 @@ export const eventInputSchema = z.object({
   priceRowsText: z.string().optional()
 });
 
+export const contentInputSchema = z.object({
+  heroEyebrow: z.string().trim().min(1).max(80),
+  heroHeadline: z.string().trim().min(1).max(140),
+  heroSubheadline: z.string().trim().min(1).max(500),
+  heroBadgesText: z.string().trim().min(1).max(500),
+  participantsText: z.string().trim().min(1).max(500),
+  instagramUrl: httpsUrl,
+  instagramHandle: z.string().trim().min(1).max(60),
+  instagramReelsText: z.string().trim().max(1200).optional().default(""),
+  faqText: z.string().trim().min(1).max(3000),
+  businessName: z.string().trim().min(1).max(80),
+  representative: z.string().trim().min(1).max(80),
+  registrationNumber: z.string().trim().min(1).max(80),
+  contact: z.string().trim().min(1).max(120),
+  domain: z.string().trim().min(1).max(80)
+});
+
 export function listEvents(db) {
   return db.prepare("select * from events order by is_featured desc, created_at desc")
     .all()
@@ -92,6 +109,16 @@ function parseLines(text) {
     .filter(Boolean);
 }
 
+function parseRequiredLines(text, message) {
+  const lines = parseLines(text);
+
+  if (lines.length === 0) {
+    throw new Error(message);
+  }
+
+  return lines;
+}
+
 function parseDelimitedRows(text, expectedParts, message, mapper) {
   const lines = parseLines(text);
 
@@ -145,6 +172,104 @@ export function serializePriceRowsText(rows) {
   return rows
     .map((row) => `${row.label}|${row.amount}|${row.note || ""}`)
     .join("\n");
+}
+
+function parseHttpsLines(text, message) {
+  return parseLines(text).map((line) => {
+    const result = httpsUrl.safeParse(line);
+
+    if (!result.success) {
+      throw new Error(message);
+    }
+
+    return result.data;
+  });
+}
+
+function parseFaqText(text) {
+  return parseRequiredLines(text, "FAQ는 question|answer 형식으로 입력해 주세요.").map((line) => {
+    const separatorIndex = line.indexOf("|");
+
+    if (separatorIndex <= 0 || separatorIndex === line.length - 1) {
+      throw new Error("FAQ는 question|answer 형식으로 입력해 주세요.");
+    }
+
+    const question = line.slice(0, separatorIndex).trim();
+    const answer = line.slice(separatorIndex + 1).trim();
+
+    if (!question || !answer) {
+      throw new Error("FAQ는 question|answer 형식으로 입력해 주세요.");
+    }
+
+    return { question, answer };
+  });
+}
+
+function serializeLines(rows) {
+  return rows.join("\n");
+}
+
+function serializeFaqText(rows) {
+  return rows
+    .map((row) => `${row.question}|${row.answer}`)
+    .join("\n");
+}
+
+function readJsonBlock(db, key, fallback) {
+  const row = db.prepare("select value_json from content_blocks where block_key = ?").get(key);
+
+  if (!row) return fallback;
+
+  try {
+    return JSON.parse(row.value_json);
+  } catch {
+    return fallback;
+  }
+}
+
+function normalizeArray(value) {
+  return Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+}
+
+function normalizeFaq(value) {
+  return Array.isArray(value)
+    ? value.filter((item) => item && typeof item.question === "string" && typeof item.answer === "string")
+    : [];
+}
+
+function upsertContentBlock(db, key, value) {
+  db.prepare(`
+    insert into content_blocks (block_key, value_json, updated_at)
+    values (?, ?, datetime('now'))
+    on conflict(block_key) do update set
+      value_json = excluded.value_json,
+      updated_at = datetime('now')
+  `).run(key, JSON.stringify(value));
+}
+
+export function getContentForAdmin(db) {
+  const hero = readJsonBlock(db, "hero", {});
+  const participants = readJsonBlock(db, "participants", []);
+  const instagram = readJsonBlock(db, "instagram", {});
+  const faq = readJsonBlock(db, "faq", []);
+  const legal = readJsonBlock(db, "legal", {});
+
+  return {
+    heroEyebrow: typeof hero.eyebrow === "string" ? hero.eyebrow : "",
+    heroHeadline: typeof hero.headline === "string" ? hero.headline : "",
+    heroSubheadline: typeof hero.subheadline === "string" ? hero.subheadline : "",
+    heroBadgesText: serializeLines(normalizeArray(hero.badges)),
+    participantsText: serializeLines(normalizeArray(participants)),
+    instagramUrl: typeof instagram.url === "string" ? instagram.url : "",
+    instagramHandle: typeof instagram.handle === "string" ? instagram.handle : "",
+    instagramReelsText: serializeLines(normalizeArray(instagram.reels)),
+    faqText: serializeFaqText(normalizeFaq(faq)),
+    businessName: typeof legal.businessName === "string" ? legal.businessName : "",
+    representative: typeof legal.representative === "string" ? legal.representative : "",
+    registrationNumber: typeof legal.registrationNumber === "string" ? legal.registrationNumber : "",
+    contact: typeof legal.contact === "string" ? legal.contact : "",
+    domain: typeof legal.domain === "string" ? legal.domain : "www.doyoulikeclassic.com"
+  };
 }
 
 function replaceTimeSlots(db, eventId, rows) {
@@ -264,5 +389,42 @@ export function featureEvent(db, id) {
     `).run(id);
 
     return result.changes === 1;
+  })();
+}
+
+export function updateContent(db, input) {
+  const data = contentInputSchema.parse(input);
+  const badges = parseRequiredLines(data.heroBadgesText, "히어로 배지를 한 줄 이상 입력해 주세요.");
+  const participants = parseRequiredLines(data.participantsText, "참여자 예시를 한 줄 이상 입력해 주세요.");
+  const reels = parseHttpsLines(data.instagramReelsText, "인스타그램 릴스 URL은 https 형식으로 입력해 주세요.");
+  const faq = parseFaqText(data.faqText);
+  const currentHero = readJsonBlock(db, "hero", {});
+  const currentInstagram = readJsonBlock(db, "instagram", {});
+  const currentLegal = readJsonBlock(db, "legal", {});
+
+  return db.transaction(() => {
+    upsertContentBlock(db, "hero", {
+      ...currentHero,
+      eyebrow: data.heroEyebrow,
+      headline: data.heroHeadline,
+      subheadline: data.heroSubheadline,
+      badges
+    });
+    upsertContentBlock(db, "participants", participants);
+    upsertContentBlock(db, "instagram", {
+      ...currentInstagram,
+      url: data.instagramUrl,
+      handle: data.instagramHandle,
+      reels
+    });
+    upsertContentBlock(db, "faq", faq);
+    upsertContentBlock(db, "legal", {
+      ...currentLegal,
+      businessName: data.businessName,
+      representative: data.representative,
+      registrationNumber: data.registrationNumber,
+      contact: data.contact,
+      domain: data.domain
+    });
   })();
 }

@@ -29,6 +29,26 @@ function eventPayload(overrides = {}) {
   };
 }
 
+function contentPayload(overrides = {}) {
+  return {
+    heroEyebrow: "서울 강남권 클래식 살롱",
+    heroHeadline: "클래식으로 시작하는 새로운 인연",
+    heroSubheadline: "서울 강남권에서 만나는 취향 기반 로테이션 소개팅",
+    heroBadgesText: "검증된 신청 폼\n선정자 개별 안내",
+    participantsText: "피아니스트\n개발자\n교사",
+    instagramUrl: "https://www.instagram.com/doyoulike.classic",
+    instagramHandle: "@doyoulike.classic",
+    instagramReelsText: "https://www.instagram.com/reel/demo-one\nhttps://www.instagram.com/reel/demo-two",
+    faqText: "신청은 어떻게 하나요?|구글폼으로 신청합니다.\n결제는 언제 하나요?|선정자에게 개별 안내합니다.",
+    businessName: "클래식을 좋아하세요",
+    representative: "대표자 입력 예정",
+    registrationNumber: "사업자등록번호 입력 예정",
+    contact: "hello@doyoulikeclassic.com",
+    domain: "www.doyoulikeclassic.com",
+    ...overrides
+  };
+}
+
 function expectInputValue(html, name, value) {
   expect(html).toContain(`name="${name}" value="${value}"`);
 }
@@ -299,13 +319,16 @@ describe("admin management", () => {
     expect(original.is_featured).toBe(0);
   });
 
-  it("requires CSRF for create and feature routes", async () => {
+  it("requires CSRF for create, feature, and content routes", async () => {
     const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
     const agent = request.agent(app);
     const csrfToken = await login(agent);
 
     const createWithoutCsrf = await agent.post("/admin/events").send(eventPayload());
     expect(createWithoutCsrf.status).toBe(403);
+
+    const contentWithoutCsrf = await agent.post("/admin/content").send(contentPayload());
+    expect(contentWithoutCsrf.status).toBe(403);
 
     const create = await agent.post("/admin/events").send(eventPayload({ csrfToken }));
     expect(create.status).toBe(302);
@@ -316,5 +339,54 @@ describe("admin management", () => {
     const featureWithoutCsrf = await agent.post(`/admin/events/${eventRow.id}/feature`).send({});
 
     expect(featureWithoutCsrf.status).toBe(403);
+  });
+
+  it("updates landing content and legal blocks from admin", async () => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+
+    const response = await agent.post("/admin/content").send(contentPayload({
+      csrfToken,
+      heroHeadline: "클래식으로 시작하는 새로운 인연"
+    }));
+
+    expect(response.status).toBe(302);
+
+    const publicPage = await request(app).get("/");
+    expect(publicPage.status).toBe(200);
+    expect(publicPage.text).toContain("클래식으로 시작하는 새로운 인연");
+    expect(publicPage.text).toContain("검증된 신청 폼");
+    expect(publicPage.text).toContain("피아니스트");
+    expect(publicPage.text).toContain("신청은 어떻게 하나요?");
+    expect(publicPage.text).toContain("hello@doyoulikeclassic.com");
+    expect(publicPage.text).toContain("클래식을 좋아하세요");
+  });
+
+  it("rejects unsafe landing content without partially updating blocks", async () => {
+    const app = createApp({ dbPath: ":memory:", seed: true, adminPassword: "secret" });
+    const agent = request.agent(app);
+    const csrfToken = await login(agent);
+    const beforeHero = app.locals.db
+      .prepare("select value_json from content_blocks where block_key = ?")
+      .get("hero");
+    const beforeInstagram = app.locals.db
+      .prepare("select value_json from content_blocks where block_key = ?")
+      .get("instagram");
+
+    const response = await agent.post("/admin/content").send(contentPayload({
+      csrfToken,
+      heroHeadline: "업데이트되면 안 됨",
+      instagramUrl: "http://www.instagram.com/doyoulike.classic",
+      instagramReelsText: "https://www.instagram.com/reel/demo-one"
+    }));
+
+    expect(response.status).toBe(400);
+    expect(app.locals.db
+      .prepare("select value_json from content_blocks where block_key = ?")
+      .get("hero")).toEqual(beforeHero);
+    expect(app.locals.db
+      .prepare("select value_json from content_blocks where block_key = ?")
+      .get("instagram")).toEqual(beforeInstagram);
   });
 });

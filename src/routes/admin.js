@@ -4,8 +4,10 @@ import { attachAdmin, requireAdmin, requireCsrf } from "../middleware/adminAuth.
 import {
   createEvent,
   featureEvent,
+  getContentForAdmin,
   getEventForAdmin,
   listEvents,
+  updateContent,
   updateEvent
 } from "../services/adminService.js";
 import { buildPublicModel } from "../services/publicModel.js";
@@ -44,6 +46,7 @@ function writeAuditLog(request, action, detail = "") {
 function renderDashboard(request, response, next, options = {}) {
   const model = buildPublicModel(request.db);
   const events = listEvents(request.db);
+  const adminContent = getContentForAdmin(request.db);
 
   renderWithLayout(
     response,
@@ -53,6 +56,7 @@ function renderDashboard(request, response, next, options = {}) {
       csrfToken: request.adminSession.csrf_token,
       model,
       events,
+      adminContent,
       error: options.error || ""
     },
     next
@@ -152,4 +156,15 @@ adminRouter.post("/events/:id/feature", requireAdmin, requireCsrf, (request, res
 
   writeAuditLog(request, "event_featured", request.params.id);
   response.redirect("/admin");
+});
+
+adminRouter.post("/content", requireAdmin, requireCsrf, (request, response, next) => {
+  try {
+    updateContent(request.db, request.body);
+    writeAuditLog(request, "content_updated", "landing content");
+    response.redirect("/admin");
+  } catch (error) {
+    response.status(400);
+    renderDashboard(request, response, next, { error: error.message });
+  }
 });

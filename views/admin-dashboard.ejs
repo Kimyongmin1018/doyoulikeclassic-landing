@@ -155,4 +155,70 @@
       </form>
     </article>
   </section>
+
+  <section class="admin-card content-editor" aria-labelledby="content-editor-title">
+    <h2 id="content-editor-title">홈 콘텐츠 / 법무 정보</h2>
+    <form method="post" action="/admin/content" class="admin-form">
+      <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
+
+      <label>
+        히어로 라벨
+        <input name="heroEyebrow" value="<%= adminContent.heroEyebrow %>" required maxlength="80">
+      </label>
+      <label>
+        히어로 제목
+        <input name="heroHeadline" value="<%= adminContent.heroHeadline %>" required maxlength="140">
+      </label>
+      <label class="admin-form-wide">
+        히어로 설명
+        <textarea name="heroSubheadline" required maxlength="500"><%= adminContent.heroSubheadline %></textarea>
+      </label>
+      <label>
+        히어로 배지
+        <textarea name="heroBadgesText" required maxlength="500"><%= adminContent.heroBadgesText %></textarea>
+      </label>
+      <label>
+        참여자 예시
+        <textarea name="participantsText" required maxlength="500"><%= adminContent.participantsText %></textarea>
+      </label>
+      <label>
+        인스타그램 URL
+        <input name="instagramUrl" value="<%= adminContent.instagramUrl %>" required inputmode="url">
+      </label>
+      <label>
+        인스타그램 핸들
+        <input name="instagramHandle" value="<%= adminContent.instagramHandle %>" required maxlength="60">
+      </label>
+      <label class="admin-form-wide">
+        인스타그램 릴스
+        <textarea name="instagramReelsText" maxlength="1200"><%= adminContent.instagramReelsText %></textarea>
+      </label>
+      <label class="admin-form-wide">
+        FAQ
+        <textarea name="faqText" required maxlength="3000"><%= adminContent.faqText %></textarea>
+      </label>
+      <label>
+        상호명
+        <input name="businessName" value="<%= adminContent.businessName %>" required maxlength="80">
+      </label>
+      <label>
+        대표자
+        <input name="representative" value="<%= adminContent.representative %>" required maxlength="80">
+      </label>
+      <label>
+        사업자등록번호
+        <input name="registrationNumber" value="<%= adminContent.registrationNumber %>" required maxlength="80">
+      </label>
+      <label>
+        문의 채널
+        <input name="contact" value="<%= adminContent.contact %>" required maxlength="120">
+      </label>
+      <label>
+        도메인
+        <input name="domain" value="<%= adminContent.domain %>" required maxlength="80">
+      </label>
+
+      <button class="button button-primary admin-form-wide" type="submit">콘텐츠 저장</button>
+    </form>
+  </section>
 </main>
