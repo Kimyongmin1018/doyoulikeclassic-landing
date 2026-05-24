@@ -36,6 +36,20 @@ const contentSchemas = {
   legal: z.object({}).passthrough()
 };
 
+function normalizeHttpsUrl(value) {
+  if (typeof value !== "string") return "";
+
+  const trimmed = value.trim();
+  if (!/^https:\/\//i.test(trimmed)) return "";
+
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "https:" && url.hostname ? trimmed : "";
+  } catch {
+    return "";
+  }
+}
+
 export function getCtaForStatus(status) {
   return ctaStates[status] || ctaStates.scheduled;
 }
@@ -55,11 +69,16 @@ function parseBlock(row, fallback, schema) {
 export function getContentBlocks(db) {
   const rows = db.prepare("select block_key, value_json from content_blocks").all();
   const byKey = Object.fromEntries(rows.map((row) => [row.block_key, row]));
+  const instagram = parseBlock(byKey.instagram, contentFallbacks.instagram, contentSchemas.instagram);
 
   return {
     hero: parseBlock(byKey.hero, contentFallbacks.hero, contentSchemas.hero),
     participants: parseBlock(byKey.participants, contentFallbacks.participants, contentSchemas.participants),
-    instagram: parseBlock(byKey.instagram, contentFallbacks.instagram, contentSchemas.instagram),
+    instagram: {
+      ...instagram,
+      url: normalizeHttpsUrl(instagram.url),
+      reels: instagram.reels.map(normalizeHttpsUrl).filter(Boolean)
+    },
     faq: parseBlock(byKey.faq, contentFallbacks.faq, contentSchemas.faq),
     legal: parseBlock(byKey.legal, contentFallbacks.legal, contentSchemas.legal)
   };
@@ -118,7 +137,7 @@ export function getFeaturedEvent(db) {
     capacityNote: event.capacity_note,
     applicationConditions: event.application_conditions,
     status: event.status,
-    googleFormUrl: cta.enabled && event.google_form_url ? event.google_form_url : "",
+    googleFormUrl: cta.enabled ? normalizeHttpsUrl(event.google_form_url) : "",
     cta,
     timeSlots,
     priceRows

@@ -112,6 +112,22 @@ describe("public model", () => {
     expect(model.hasOpenApplication).toBe(false);
   });
 
+  it.each([
+    ["javascript URL", "javascript:alert(1)"],
+    ["http URL", "http://forms.gle/insecure"],
+    ["relative URL", "/apply"],
+    ["malformed URL", "https://[broken"]
+  ])("does not expose unsafe application URLs for %s", (_caseName, googleFormUrl) => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+    db.prepare("update events set google_form_url = ? where id = ?").run(googleFormUrl, "classic-rotation-6");
+
+    const model = buildPublicModel(db);
+
+    expect(model.featuredEvent.googleFormUrl).toBe("");
+    expect(model.hasOpenApplication).toBe(false);
+  });
+
   it("uses safe content fallbacks when content is missing or malformed", () => {
     const db = createDatabase(":memory:");
     seedDatabase(db);
@@ -133,6 +149,31 @@ describe("public model", () => {
       faq: [],
       legal: expect.any(Object)
     });
+  });
+
+  it.each([
+    ["javascript URL", "javascript:alert(1)"],
+    ["http URL", "http://www.instagram.com/doyoulike.classic"],
+    ["relative URL", "/doyoulike.classic"],
+    ["malformed URL", "https://[broken"]
+  ])("filters unsafe instagram URLs for %s", (_caseName, unsafeUrl) => {
+    const db = createDatabase(":memory:");
+    seedDatabase(db);
+    const validReel = "https://www.instagram.com/reel/safe";
+    const instagram = {
+      handle: "@doyoulike.classic",
+      url: unsafeUrl,
+      reels: [unsafeUrl, validReel]
+    };
+    db.prepare("update content_blocks set value_json = ? where block_key = ?").run(
+      JSON.stringify(instagram),
+      "instagram"
+    );
+
+    const model = buildPublicModel(db);
+
+    expect(model.content.instagram.url).toBe("");
+    expect(model.content.instagram.reels).toEqual([validReel]);
   });
 
   it.each([

@@ -623,12 +623,15 @@ dd {
 }
 
 .reveal {
-  opacity: 0;
-  transform: translateY(18px);
   transition: opacity 520ms ease, transform 520ms ease;
 }
 
-.reveal.is-visible {
+.js .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.js .reveal.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
