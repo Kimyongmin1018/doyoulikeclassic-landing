@@ -71,28 +71,45 @@ const contentBlocks = {
   }
 };
 
-function migrateSeededChildRowIds(db, tableName, seededRows) {
+function migrateSeededChildRowIds(db, tableName, seededRows, identityColumns) {
   const stableRowExists = db.prepare(`select 1 from ${tableName} where id = ?`);
+  const identityWhere = identityColumns.map((column) => `and ${column} = ?`).join("\n          ");
+  const findLegacyRows = db.prepare(
+    `
+      select rowid
+      from ${tableName}
+      where event_id = ?
+        ${identityWhere}
+        and id <> ?
+      order by sort_order, rowid
+    `
+  );
   const migrateLegacyRow = db.prepare(
     `
       update ${tableName}
       set id = ?
-      where rowid = (
-        select rowid
-        from ${tableName}
-        where event_id = ?
-          and label = ?
-          and id <> ?
-        order by sort_order, rowid
-        limit 1
-      )
+      where rowid = ?
     `
   );
+  const deleteLegacyRow = db.prepare(`delete from ${tableName} where rowid = ?`);
 
-  seededRows.forEach(([id, label]) => {
-    if (!stableRowExists.get(id)) {
-      migrateLegacyRow.run(id, EVENT_ID, label, id);
+  seededRows.forEach((seededRow) => {
+    const [id, ...seedValues] = seededRow;
+    const identityValues = seedValues.slice(0, identityColumns.length);
+    const legacyRows = findLegacyRows.all(EVENT_ID, ...identityValues, id);
+
+    if (!stableRowExists.get(id) && legacyRows.length > 0) {
+      const [rowToMigrate, ...duplicateRows] = legacyRows;
+      migrateLegacyRow.run(id, rowToMigrate.rowid);
+      duplicateRows.forEach((row) => {
+        deleteLegacyRow.run(row.rowid);
+      });
+      return;
     }
+
+    legacyRows.forEach((row) => {
+      deleteLegacyRow.run(row.rowid);
+    });
   });
 }
 
@@ -125,7 +142,7 @@ export function seedDatabase(db) {
       1
     );
 
-    migrateSeededChildRowIds(db, "event_time_slots", timeSlots);
+    migrateSeededChildRowIds(db, "event_time_slots", timeSlots, ["label", "starts_at", "ends_at"]);
 
     const insertTimeSlot = db.prepare(
       `
@@ -138,7 +155,7 @@ export function seedDatabase(db) {
       insertTimeSlot.run(id, EVENT_ID, label, startsAt, endsAt, sortOrder);
     });
 
-    migrateSeededChildRowIds(db, "event_price_rows", priceRows);
+    migrateSeededChildRowIds(db, "event_price_rows", priceRows, ["label", "amount", "note"]);
 
     const insertPriceRow = db.prepare(
       `
