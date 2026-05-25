@@ -230,9 +230,9 @@
   <section id="instagram" class="section instagram-section" aria-labelledby="instagram-title">
     <div class="section-inner instagram-shell">
       <div class="instagram-profile reveal">
-        <div class="instagram-avatar" aria-hidden="true">
-          <img src="/assets/images/classic-detail.jpg" alt="">
-        </div>
+      <div class="instagram-avatar" aria-hidden="true">
+          <img src="/assets/images/doyoulikeclassic-logo.jpg" alt="">
+      </div>
         <div class="instagram-profile-copy">
           <p class="eyebrow instagram-eyebrow">Instagram</p>
           <h2 id="instagram-title">Instagram에서 먼저 만나는 클래식 살롱</h2>
@@ -295,24 +295,17 @@
 <footer class="site-footer">
   <div class="section-inner footer-grid">
     <div>
-      <strong>클래식을 좋아하세요</strong>
+      <strong>클래식을 좋아하세요..?</strong>
       <p>서울 강남권에서 열리는 클래식 취향 기반 로테이션 소개팅</p>
     </div>
     <dl>
       <div><dt>Instagram</dt><dd><a href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer"><%= model.content.instagram.handle %></a></dd></div>
-      <div><dt>Domain</dt><dd><%= model.content.legal.domain || "www.doyoulikeclassic.com" %></dd></div>
+      <div><dt>Domain</dt><dd><%= model.content.legal.domain || "http://doyoulikeclassic.com/" %></dd></div>
       <div><dt>Contact</dt><dd><%= model.content.legal.contact || "문의 채널 입력 예정" %></dd></div>
     </dl>
     <dl>
-      <div><dt>상호</dt><dd><%= model.content.legal.businessName || "상호명 입력 예정" %></dd></div>
-      <div><dt>대표</dt><dd><%= model.content.legal.representative || "대표자 입력 예정" %></dd></div>
-      <div><dt>사업자등록번호</dt><dd><%= model.content.legal.registrationNumber || "사업자등록번호 입력 예정" %></dd></div>
+      <div><dt>대표</dt><dd><%= model.content.legal.representative || "이채연" %></dd></div>
     </dl>
-    <nav aria-label="정책 링크">
-      <a href="#faq">이용약관</a>
-      <a href="#faq">개인정보 처리방침</a>
-      <a href="#event">환불 및 취소 안내</a>
-    </nav>
   </div>
 </footer>
 

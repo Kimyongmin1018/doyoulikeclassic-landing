@@ -55,7 +55,7 @@ test("event, process, faq, and footer sections are reachable", async ({ page }) 
   await page.getByRole("link", { name: "진행 방식", exact: true }).click();
   await expect(page.getByRole("heading", { name: /신청부터 만남까지/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "처음 신청하는 분들이 자주 묻는 질문" })).toBeVisible();
-  await expect(page.getByText("www.doyoulikeclassic.com")).toBeVisible();
+  await expect(page.getByText("http://doyoulikeclassic.com/")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 

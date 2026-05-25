@@ -402,9 +402,9 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("선정자에게 개별 안내합니다.");
     expect(publicPage.text).toContain("hello@doyoulikeclassic.com");
     expect(publicPage.text).toContain("demo.doyoulikeclassic.com");
-    expect(publicPage.text).toContain("테스트 클래식 살롱");
     expect(publicPage.text).toContain("홍길동");
-    expect(publicPage.text).toContain("123-45-67890");
+    expect(publicPage.text).not.toContain("테스트 클래식 살롱");
+    expect(publicPage.text).not.toContain("123-45-67890");
   });
 
   it("rejects unsafe landing content without partially updating blocks", async () => {

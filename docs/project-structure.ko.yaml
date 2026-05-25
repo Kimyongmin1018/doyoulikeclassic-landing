@@ -1,0 +1,1106 @@
+문서_메타데이터:
+  제목: "doyoulikeclassic-landing 프로젝트 구성 설명"
+  언어: "ko-KR"
+  작성일: "2026-05-25"
+  기준_브랜치_상태: "현재 로컬 작업 디렉터리 기준"
+  목적: >
+    이 YAML은 doyoulikeclassic-landing 저장소가 어떤 파일 구조로 되어 있고,
+    Express/EJS/SQLite 기반 랜딩 페이지와 관리자(admin) 기능이 어떤 흐름으로
+    작동하는지 한글로 상세히 설명하기 위한 문서이다.
+  주의:
+    - "node_modules 폴더는 설치된 외부 패키지 폴더라 상세 파일 목록에서 제외한다."
+    - "data/classic-rotation.sqlite 파일은 현재 로컬에 존재하는 실행용 SQLite DB이지만 .gitignore에 의해 Git에는 포함하지 않는 런타임 데이터이다."
+    - 신청자 개인정보는 이 앱 DB에 저장하지 않고 Google Forms에서 관리하도록 설계되어 있다.
+
+프로젝트_요약:
+  서비스명: "클래식을 좋아하세요"
+  package_name: "classic-rotation-landing"
+  버전: "0.1.0"
+  앱_성격:
+    - "클래식 취향 기반 로테이션 소개팅 랜딩 페이지"
+    - "운영자가 행사 일정과 랜딩 콘텐츠를 수정할 수 있는 B-lite 관리자 시스템"
+    - "Raspberry Pi + Node.js + Nginx + SQLite 배포를 염두에 둔 작은 서버 앱"
+  주요_사용자:
+    공개_방문자:
+      설명: "랜딩 페이지에서 행사 정보, 지원현황, FAQ, Instagram 링크를 보고 Google Form으로 신청한다."
+      경로: "/"
+    관리자:
+      설명: "단일 비밀번호로 로그인해 행사, 대표 일정, 콘텐츠, FAQ, 법무/연락처 정보를 수정한다."
+      경로:
+        로그인: "/admin/login"
+        대시보드: "/admin"
+  핵심_원칙:
+    - "공개 페이지에는 대표로 지정된 행사 1개만 표시한다."
+    - "관리자는 여러 행사를 저장하고 그중 하나를 대표 행사로 지정할 수 있다."
+    - "신청은 앱 내부 폼이 아니라 Google Forms 외부 링크로 이동한다."
+    - "앱 DB에는 신청자 이름, 연락처, 생년월일, 결제정보 같은 개인정보를 저장하지 않는다."
+    - "시드 데이터는 초기 기본값일 뿐이며, 관리자 수정 내용을 덮어쓰지 않도록 설계되어 있다."
+
+기술_스택:
+  런타임:
+    node: "Node.js 20 이상 권장"
+    module_system: "ES Modules(package.json의 type: module)"
+  서버:
+    express: "HTTP 서버와 라우팅"
+    ejs: "서버 사이드 HTML 템플릿"
+    helmet: "기본 보안 HTTP 헤더"
+    cookie_parser: "서명 쿠키 파싱"
+    express_rate_limit: "관리자 로그인 시도 제한"
+  데이터:
+    better_sqlite3: "SQLite 파일 DB 접근"
+    sqlite_file_default: "data/classic-rotation.sqlite"
+    test_db: ":memory: 또는 data/test-playwright.sqlite"
+  검증_보안:
+    zod: "관리자 입력값 스키마 검증"
+    nanoid: "행사 ID, 세션 토큰, CSRF 토큰 생성"
+    node_crypto: "타이밍 안전 문자열 비교와 HMAC 토큰 해시"
+  프론트엔드:
+    css: "public/styles.css 단일 스타일시트"
+    javascript: "public/site.js 바닐라 JS"
+    assets: "public/assets/images/*.jpg"
+  테스트:
+    vitest: "단위/통합 테스트"
+    supertest: "Express HTTP 테스트"
+    playwright: "브라우저 렌더링/반응형/이미지 테스트"
+
+루트_파일:
+  package.json:
+    역할: "프로젝트 메타데이터, 실행 스크립트, 의존성 정의"
+    중요_설정:
+      type: "module"
+      private: true
+    scripts:
+      dev: "node --watch server.js"
+      start: "node server.js"
+      test: "vitest run"
+      test_watch: "vitest"
+      test_browser: "playwright test"
+      db_seed: "node src/db/seed.js"
+    dependencies:
+      - "better-sqlite3"
+      - "cookie-parser"
+      - "dotenv"
+      - "ejs"
+      - "express"
+      - "express-rate-limit"
+      - "helmet"
+      - "nanoid"
+      - "zod"
+    devDependencies:
+      - "@playwright/test"
+      - "supertest"
+      - "vitest"
+  package-lock.json:
+    역할: "npm 설치 의존성 버전을 잠그는 파일"
+    운영_의미: "배포나 재설치 시 동일한 패키지 트리를 만들기 위해 사용"
+  server.js:
+    역할: "프로덕션/로컬 실행 진입점"
+    실행_흐름:
+      - "loadConfig()로 환경 설정을 읽는다."
+      - "config.dbPath에 SQLite 파일이 없으면 createDatabase() 후 seedDatabase()를 실행한다."
+      - "createApp(config)로 Express 앱을 만든다."
+      - "config.port에서 listen한다."
+    자동_시딩:
+      조건: "DB 파일이 없을 때만 자동 실행"
+      이유: "처음 배포하거나 새 환경에서 실행할 때 기본 행사/콘텐츠를 생성하기 위함"
+  README.md:
+    역할: "로컬 개발, 테스트, 운영 개요"
+    주요_명령:
+      - "npm install"
+      - "cp .env.example .env"
+      - "npm run db:seed"
+      - "npm run dev"
+    접속_URL:
+      public: "http://localhost:3000"
+      admin: "http://localhost:3000/admin"
+  .env.example:
+    역할: "환경 변수 예시"
+    변수:
+      NODE_ENV: "development"
+      PORT: "3000"
+      DATABASE_PATH: "data/classic-rotation.sqlite"
+      ADMIN_PASSWORD: "change-this-before-production"
+      SESSION_SECRET: "replace-with-a-long-random-string"
+      PUBLIC_BASE_URL: "http://localhost:3000"
+    보안_주의:
+      - "실제 .env는 Git에 커밋하지 않는다."
+      - "production에서는 ADMIN_PASSWORD와 SESSION_SECRET을 강한 값으로 바꿔야 한다."
+  .gitignore:
+    역할: "Git에 포함하지 않을 로컬/생성 파일 정의"
+    제외_대상:
+      - "node_modules/"
+      - ".env"
+      - ".env.local"
+      - "data/*.sqlite"
+      - "data/*.sqlite-*"
+      - "logs/"
+      - "coverage/"
+      - "playwright-report/"
+      - "test-results/"
+      - ".DS_Store"
+      - ".superpowers/"
+  vitest.config.js:
+    역할: "Vitest 테스트 설정"
+    동작:
+      - "node_modules, dist, tests/playwright 폴더를 Vitest 대상에서 제외한다."
+      - "Playwright 테스트는 npm run test:browser로 별도 실행한다."
+  playwright.config.js:
+    역할: "브라우저 테스트 설정"
+    포트: 3210
+    webServer:
+      command: "rm -f data/test-playwright.sqlite && npm run start"
+      database: "data/test-playwright.sqlite"
+      env:
+        NODE_ENV: "test"
+        ADMIN_PASSWORD: "secret"
+        SESSION_SECRET: "test-secret-for-browser-verification"
+    projects:
+      - "Desktop Chrome"
+      - "Mobile Safari(iPhone 13)"
+
+디렉터리_구조:
+  src:
+    설명: "서버 앱의 핵심 로직"
+    하위:
+      app_js: "Express 앱 팩토리"
+      config_js: "환경 설정 로더"
+      db: "SQLite 연결, 스키마, 시드"
+      routes: "공개/관리자 라우터"
+      services: "비즈니스 로직, 공개 모델, 보안"
+      middleware: "관리자 인증/CSRF 미들웨어"
+  views:
+    설명: "EJS 서버 렌더링 템플릿"
+    파일:
+      layout_ejs: "공통 HTML 문서 껍데기"
+      index_ejs: "공개 랜딩 페이지"
+      admin_login_ejs: "관리자 로그인"
+      admin_dashboard_ejs: "관리자 운영 대시보드"
+  public:
+    설명: "정적 파일"
+    파일:
+      styles_css: "전체 공개/관리자 화면 스타일"
+      site_js: "공개 페이지 인터랙션"
+      assets_images: "랜딩에 쓰는 JPG 이미지"
+  tests:
+    설명: "Vitest/Supertest/Playwright 테스트"
+  docs:
+    설명: "배포, 보안, 구현 계획, 설계 기록 문서"
+  data:
+    설명: "로컬 SQLite DB 저장 위치"
+    git_포함: false
+
+애플리케이션_초기화_흐름:
+  1_loadConfig:
+    파일: "src/config.js"
+    설명: "process.env와 createApp(overrides)를 합쳐 config 객체를 만든다."
+    반환값:
+      nodeEnv: "NODE_ENV 또는 development"
+      port: "PORT 또는 3000"
+      dbPath: "DATABASE_PATH 또는 data/classic-rotation.sqlite"
+      adminPassword: "ADMIN_PASSWORD 또는 개발용 placeholder"
+      sessionSecret: "SESSION_SECRET 또는 개발용 placeholder"
+      publicBaseUrl: "PUBLIC_BASE_URL 또는 http://localhost:3000"
+      secureCookies: "NODE_ENV가 production이면 true"
+    production_검증:
+      - "ADMIN_PASSWORD가 비어 있거나 change-this-before-production이면 에러"
+      - "SESSION_SECRET이 dev-session-secret 또는 replace-with-a-long-random-string이면 에러"
+  2_createDatabase:
+    파일: "src/db/database.js"
+    설명: "SQLite DB를 열고 schema.sql을 실행해 필요한 테이블을 보장한다."
+    동작:
+      - "dbPath가 :memory:가 아니면 상위 디렉터리를 자동 생성한다."
+      - "better-sqlite3 Database 인스턴스를 만든다."
+      - "foreign_keys = ON pragma를 켠다."
+      - "src/db/schema.sql을 읽어 exec한다."
+  3_seedDatabase:
+    파일: "src/db/seed.js"
+    설명: "기본 행사, 시간대, 가격, 콘텐츠 블록을 삽입한다."
+    특징:
+      - "insert on conflict do nothing을 사용해 기존 관리자 수정을 보존한다."
+      - "대표 행사가 이미 있으면 새 시드 행사를 대표로 강제 지정하지 않는다."
+      - "시드 child row에는 안정적인 ID를 사용한다."
+      - "예전 랜덤 ID 기반 시드 child row를 안정 ID로 마이그레이션하거나 중복 제거한다."
+  4_createApp:
+    파일: "src/app.js"
+    설명: "Express 앱을 만들고 미들웨어, 라우터, EJS, 정적 파일을 연결한다."
+    전역_로컬:
+      app.locals.config: "환경 설정"
+      app.locals.db: "SQLite DB 인스턴스"
+      app.locals.serviceName: "클래식을 좋아하세요"
+    미들웨어_순서:
+      - "helmet()"
+      - "cookieParser(config.sessionSecret)"
+      - "express.urlencoded({ extended: false })"
+      - "express.json()"
+      - "express.static(public)"
+      - "request.db와 request.config 주입"
+      - "/admin 라우터"
+      - "/ 공개 라우터"
+    production_프록시:
+      조건: "config.nodeEnv === production"
+      동작: "app.set('trust proxy', 1)"
+
+라우팅:
+  공개:
+    파일: "src/routes/public.js"
+    "GET_/":
+      설명: "공개 랜딩 페이지 렌더링"
+      흐름:
+        - "buildPublicModel(request.db)로 화면 모델 생성"
+        - "views/index.ejs를 먼저 렌더링"
+        - "렌더링된 body를 views/layout.ejs에 주입"
+      응답_내용:
+        - "대표 행사"
+        - "히어로 콘텐츠"
+        - "지원현황"
+        - "진행 방식"
+        - "참여자 예시"
+        - "Instagram 릴스 링크"
+        - "FAQ"
+        - "법무/연락처 푸터"
+  관리자:
+    파일: "src/routes/admin.js"
+    공통:
+      - "adminRouter.use(attachAdmin)로 모든 관리자 요청에 세션 정보를 붙인다."
+      - "POST 변경 요청은 requireAdmin과 requireCsrf를 사용한다."
+    "GET_/admin/login":
+      설명: "로그인 화면"
+      동작:
+        - "이미 로그인된 세션이 있으면 /admin으로 redirect"
+        - "아니면 admin-login.ejs 렌더링"
+    "POST_/admin/login":
+      설명: "관리자 비밀번호 로그인"
+      보호:
+        rate_limit: "15분에 10회, 성공 요청은 카운트 제외"
+        password_compare: "safeCompareText로 타이밍 안전 비교"
+      성공:
+        - "createSession으로 48자 세션 토큰과 32자 CSRF 토큰 생성"
+        - "admin_session 서명 쿠키 발급"
+        - "admin_audit_log에 login_success 기록"
+        - "/admin으로 redirect"
+      실패:
+        - "admin_audit_log에 login_failed 기록"
+        - "401 상태와 오류 메시지 렌더링"
+    "POST_/admin/logout":
+      설명: "관리자 로그아웃"
+      보호:
+        - "requireAdmin"
+        - "requireCsrf"
+      동작:
+        - "DB의 admin_sessions에서 현재 토큰 삭제"
+        - "admin_session 쿠키 제거"
+        - "/admin/login으로 redirect"
+    "GET_/admin":
+      설명: "운영 대시보드"
+      보호:
+        - "requireAdmin"
+      화면_데이터:
+        - "buildPublicModel로 공개 페이지 모델"
+        - "listEvents로 모든 행사"
+        - "getContentForAdmin으로 편집용 콘텐츠"
+        - "request.adminSession.csrf_token"
+    "POST_/admin/events":
+      설명: "새 일정 추가"
+      보호:
+        - "requireAdmin"
+        - "requireCsrf"
+      서비스: "createEvent"
+      성공: "event_created 감사 로그 후 /admin redirect"
+      실패: "400과 대시보드 오류 표시"
+    "POST_/admin/events/:id":
+      설명: "기존 일정 수정"
+      보호:
+        - "requireAdmin"
+        - "requireCsrf"
+      서비스: "updateEvent"
+      성공: "event_updated 감사 로그 후 /admin redirect"
+      실패:
+        - "행사 없음: 404 Event not found"
+        - "검증 실패: 400과 대시보드 오류 표시"
+    "POST_/admin/events/:id/feature":
+      설명: "특정 일정을 공개 대표 행사로 지정"
+      보호:
+        - "requireAdmin"
+        - "requireCsrf"
+      서비스: "featureEvent"
+      동작:
+        - "모든 행사의 is_featured를 0으로 변경"
+        - "지정 행사를 is_featured=1, is_visible=1로 변경"
+      성공: "event_featured 감사 로그 후 /admin redirect"
+    "POST_/admin/content":
+      설명: "홈 콘텐츠, 지원현황, Instagram, FAQ, 법무 정보 수정"
+      보호:
+        - "requireAdmin"
+        - "requireCsrf"
+      서비스: "updateContent"
+      성공: "content_updated 감사 로그 후 /admin redirect"
+
+공개_모델:
+  파일: "src/services/publicModel.js"
+  buildPublicModel:
+    설명: "index.ejs에 넘길 공개 화면용 모델 생성"
+    반환:
+      serviceName: "클래식을 좋아하세요"
+      featuredEvent: "대표 행사 객체 또는 null"
+      content: "content_blocks에서 읽은 공개 콘텐츠"
+      hasOpenApplication: "현재 공개 신청 링크가 있으면 true"
+  getFeaturedEvent:
+    선택_조건:
+      - "events.is_featured = 1"
+      - "events.is_visible = 1"
+      - "events.status != hidden"
+    포함_데이터:
+      - "행사 제목, 기수, 날짜, 지역, 장소, 정원, 신청 조건"
+      - "상태별 CTA"
+      - "시간 슬롯"
+      - "참가비 행"
+    google_form_url_노출:
+      조건:
+        - "CTA가 enabled인 상태(open 또는 closing-soon)"
+        - "URL이 https"
+        - "host가 forms.gle 또는 docs.google.com/forms/*"
+      불가_시: "빈 문자열로 바꿔 공개 페이지에 신청 href를 노출하지 않는다."
+  CTA_상태:
+    open:
+      label: "이번 기수 신청하기"
+      enabled: true
+    closing-soon:
+      label: "마감 전 신청하기"
+      enabled: true
+    closed:
+      label: "모집 마감"
+      enabled: false
+    scheduled:
+      label: "신청 오픈 예정"
+      enabled: false
+    hidden:
+      label: "신청 오픈 예정"
+      enabled: false
+    unknown_or_undefined:
+      label: "신청 오픈 예정"
+      enabled: false
+  content_blocks_처리:
+    블록:
+      - "hero"
+      - "participants"
+      - "applicationStatus"
+      - "instagram"
+      - "faq"
+      - "legal"
+    검증:
+      - "각 블록 JSON을 파싱하고 Zod 스키마로 형태를 확인한다."
+      - "형태가 틀리거나 JSON이 깨져 있으면 안전한 fallback을 반환한다."
+    URL_정규화:
+      - "applicationStatus.url은 https만 허용"
+      - "instagram.url과 reels는 https만 허용"
+      - "안전하지 않은 URL은 빈 값 또는 제외 처리"
+
+관리자_서비스:
+  파일: "src/services/adminService.js"
+  입력_검증:
+    eventInputSchema:
+      publicTitle: "1~80자"
+      generationLabel: "1~40자"
+      eventDate: "1~40자"
+      region: "1~40자"
+      venueNote: "1~120자"
+      capacityNote: "1~60자"
+      applicationConditions: "1~120자"
+      status: "open | closing-soon | closed | scheduled | hidden"
+      googleFormUrl: "https 기반 Google Forms URL만 허용"
+      timeSlotsText: "선택 입력, 줄 단위 label|startsAt|endsAt"
+      priceRowsText: "선택 입력, 줄 단위 label|amount|note"
+    contentInputSchema:
+      hero: "라벨, 제목, 설명, 배지 텍스트"
+      participants: "참여자 예시 줄 목록"
+      applicationStatus: "지원현황 URL, 기준 문구, 남녀 요약/행/안내 문구"
+      instagram: "URL, 핸들, 릴스 URL 목록"
+      faq: "question|answer 줄 목록"
+      legal: "상호명, 대표자, 사업자등록번호, 문의 채널, 도메인"
+  문자열_포맷:
+    timeSlotsText:
+      예시: |
+        1회차|16:00|18:00
+        2회차|18:30|20:30
+      검증: "각 줄은 label, startsAt, endsAt 3개 값이 모두 있어야 한다."
+    priceRowsText:
+      예시: |
+        기본|35,000원|
+        얼리버드|35,000원|5월 한정
+      검증: "각 줄은 label, amount가 필수이고 note는 선택이다."
+    faqText:
+      예시: |
+        신청은 선착순인가요?|아니요. 내부 검토 후 개별 연락드립니다.
+        결제는 언제 하나요?|참여 확정 후 별도 안내드립니다.
+      검증: "질문과 답변 사이에 |가 있어야 한다."
+  createEvent:
+    설명: "새 행사를 만들고 시간 슬롯/가격 행을 함께 저장"
+    id: "nanoid()로 생성"
+    internal_name: "admin-{id}"
+    기본값:
+      timeSlotsText_없을_때: "1회차 16:00-18:00"
+      priceRowsText_없을_때: "기본 35,000원"
+    대표여부: "새 행사는 기본적으로 is_featured=0"
+    공개여부: "is_visible=1"
+  updateEvent:
+    설명: "기존 행사 필드와 child row를 트랜잭션으로 수정"
+    트랜잭션_보장:
+      - "행사 본문, 시간 슬롯, 가격 중 하나라도 검증 실패하면 부분 업데이트가 남지 않는다."
+      - "시간/가격 수정 시 기존 child row를 삭제하고 새 row를 순서대로 삽입한다."
+  featureEvent:
+    설명: "대표 행사를 하나로 유지"
+    DB_제약과_함께_동작:
+      - "one_featured_event partial unique index"
+      - "서비스 레벨에서 모든 대표 플래그를 0으로 만든 뒤 대상만 1로 설정"
+  updateContent:
+    설명: "content_blocks의 JSON 값을 upsert"
+    특징:
+      - "기존 JSON 객체의 알 수 없는 필드는 가능한 보존하면서 관리자가 수정한 필드를 갱신한다."
+      - "hero, participants, applicationStatus, instagram, faq, legal을 하나의 트랜잭션으로 저장한다."
+      - "URL 검증 실패나 FAQ 포맷 오류 시 일부 블록만 바뀌지 않는다."
+
+관리자_인증_및_보안:
+  파일:
+    middleware: "src/middleware/adminAuth.js"
+    service: "src/services/security.js"
+  비밀번호:
+    저장방식: "별도 DB 저장 없음, ADMIN_PASSWORD 환경 변수와 입력값 비교"
+    비교함수: "safeCompareText"
+    보안특징:
+      - "Buffer 길이를 맞춘 뒤 crypto.timingSafeEqual 사용"
+      - "길이가 다른 문자열 비교에서도 예외가 나지 않음"
+  세션:
+    쿠키명: "admin_session"
+    쿠키_옵션:
+      httpOnly: true
+      signed: true
+      sameSite: "lax"
+      secure: "production에서 true"
+      expires: "세션 만료 시각"
+    토큰:
+      원본: "nanoid(48), 쿠키에 저장"
+      DB저장: "SESSION_SECRET으로 HMAC-SHA256 해시한 token_hash"
+      이유: "DB에 원본 세션 토큰을 저장하지 않기 위함"
+    만료시간: "8시간"
+    findSession:
+      - "쿠키 토큰이 없으면 null"
+      - "해시와 일치하는 DB 세션이 없으면 null"
+      - "만료된 세션은 삭제 후 null"
+  CSRF:
+    생성: "createSession에서 nanoid(32)로 csrfToken 생성"
+    저장: "admin_sessions.csrf_token"
+    제출:
+      - "폼 hidden input name=csrfToken"
+      - "또는 x-csrf-token 헤더"
+    실패: "403 CSRF token mismatch"
+  로그인_제한:
+    라이브러리: "express-rate-limit"
+    windowMs: "15분"
+    limit: 10
+    skipSuccessfulRequests: true
+  감사로그:
+    테이블: "admin_audit_log"
+    기록_액션:
+      - "login_failed"
+      - "login_success"
+      - "event_created"
+      - "event_updated"
+      - "event_featured"
+      - "content_updated"
+    포함정보:
+      - "action"
+      - "detail"
+      - "ip_address"
+      - "created_at"
+
+데이터베이스:
+  파일:
+    schema: "src/db/schema.sql"
+    helper: "src/db/database.js"
+    seed: "src/db/seed.js"
+  설정:
+    foreign_keys: true
+    기본_DB경로: "data/classic-rotation.sqlite"
+  테이블:
+    events:
+      설명: "행사/일정의 부모 테이블"
+      주요_컬럼:
+        id: "text primary key"
+        internal_name: "내부 관리용 이름"
+        public_title: "공개 제목"
+        generation_label: "기수 라벨"
+        event_date: "날짜 표시 문자열"
+        region: "지역"
+        venue_note: "장소 안내"
+        capacity_note: "정원/성비 안내"
+        application_conditions: "신청 조건"
+        status: "open | closing-soon | closed | scheduled | hidden"
+        google_form_url: "신청용 Google Form URL"
+        is_featured: "대표 행사 여부 0/1"
+        is_visible: "공개 노출 가능 여부 0/1"
+        created_at: "생성 시각"
+        updated_at: "수정 시각"
+      제약:
+        status_check: "허용된 상태값만 저장"
+        is_featured_check: "0 또는 1"
+        is_visible_check: "0 또는 1"
+        one_featured_event_index: "is_featured=1인 row는 하나만 허용"
+    event_time_slots:
+      설명: "행사별 회차/시간 목록"
+      관계: "event_id -> events(id), on delete cascade"
+      주요_컬럼:
+        id: "text primary key"
+        event_id: "소속 행사 ID"
+        label: "1회차, 2회차 등"
+        starts_at: "시작 시간 표시 문자열"
+        ends_at: "종료 시간 표시 문자열"
+        sort_order: "공개 정렬 순서"
+    event_price_rows:
+      설명: "행사별 참가비/할인 목록"
+      관계: "event_id -> events(id), on delete cascade"
+      주요_컬럼:
+        id: "text primary key"
+        event_id: "소속 행사 ID"
+        label: "기본, 동반 할인 등"
+        amount: "금액 표시 문자열"
+        note: "부가 설명"
+        sort_order: "공개 정렬 순서"
+    content_blocks:
+      설명: "랜딩 콘텐츠를 block_key별 JSON으로 저장"
+      주요_컬럼:
+        block_key: "hero, participants, applicationStatus, instagram, faq, legal"
+        value_json: "JSON 문자열"
+        updated_at: "수정 시각"
+      장점:
+        - "스키마 변경 없이 랜딩 문구/목록을 유연하게 수정 가능"
+        - "관리자 페이지에서 텍스트 폼으로 편집 후 JSON으로 저장"
+    admin_sessions:
+      설명: "관리자 로그인 세션 저장"
+      주요_컬럼:
+        token_hash: "HMAC-SHA256 세션 토큰 해시 primary key"
+        csrf_token: "CSRF 검증 토큰"
+        expires_at: "만료 시각"
+        created_at: "생성 시각"
+    admin_audit_log:
+      설명: "관리자 주요 행위 기록"
+      주요_컬럼:
+        id: "autoincrement primary key"
+        action: "행위 이름"
+        detail: "행사 ID나 설명"
+        ip_address: "요청 IP"
+        created_at: "기록 시각"
+
+시드_데이터:
+  파일: "src/db/seed.js"
+  대표_행사:
+    id: "classic-rotation-6"
+    internal_name: "notion-seed-6"
+    public_title: "클래식을 좋아하세요 6기"
+    generation_label: "6기 모집"
+    event_date: "6/13 토요일"
+    region: "서울 강남권"
+    venue_note: "논현역 인근, 참여 확정자에게 개별 안내"
+    capacity_note: "최대 10:10"
+    application_conditions: "92-06년생 남자 / 94-06년생 여자"
+    status: "open"
+    google_form_url: "https://forms.gle/3jSCCw38u8auqJ7Y6"
+  시간_슬롯:
+    - id: "classic-rotation-6-slot-1"
+      label: "1회차"
+      starts_at: "16:00"
+      ends_at: "18:00"
+      sort_order: 1
+    - id: "classic-rotation-6-slot-2"
+      label: "2회차"
+      starts_at: "18:30"
+      ends_at: "20:30"
+      sort_order: 2
+  참가비:
+    - id: "classic-rotation-6-price-base"
+      label: "기본"
+      amount: "35,000원"
+      note: ""
+      sort_order: 1
+    - id: "classic-rotation-6-price-companion"
+      label: "동반 할인"
+      amount: "35,000원"
+      note: ""
+      sort_order: 2
+    - id: "classic-rotation-6-price-alumni"
+      label: "이전 기수 할인"
+      amount: "35,000원"
+      note: ""
+      sort_order: 3
+    - id: "classic-rotation-6-price-early-bird"
+      label: "얼리버드 할인"
+      amount: "35,000원"
+      note: ""
+      sort_order: 4
+  콘텐츠_블록:
+    hero:
+      eyebrow: "국내 최초 클래식 로테이션 소개팅"
+      headline: "클래식을 좋아하세요..? 같은 취향이 설렘이 되는 밤."
+      badges:
+        - "누적 신청자 500명 이상"
+        - "5-10명 순차 대화"
+        - "서울 강남권"
+        - "선정자 개별 안내"
+    participants:
+      - "클래식 전공자"
+      - "개발자"
+      - "교사"
+      - "연구원"
+      - "금융권 종사자"
+    applicationStatus:
+      url: "https://doyoulikeclassic.notion.site/27281544f0928301a650015e4373f855"
+      updatedLabel: "서울 강남권 6기 | 2026.05.24 기준"
+      maleSummary: "남자 17명"
+      femaleSummary: "여자 20명"
+    instagram:
+      handle: "@doyoulike.classic"
+      url: "https://www.instagram.com/doyoulike.classic"
+      reels_count: 4
+    faq:
+      항목수: 4
+      예시_질문:
+        - "신청은 선착순인가요?"
+        - "클래식 전공자가 아니어도 신청할 수 있나요?"
+        - "결제는 언제 하나요?"
+        - "개인정보는 어디에 저장되나요?"
+    legal:
+      domain: "www.doyoulikeclassic.com"
+      placeholders:
+        - "상호명 입력 예정"
+        - "대표자 입력 예정"
+        - "사업자등록번호 입력 예정"
+        - "문의 채널 입력 예정"
+
+화면_템플릿:
+  layout_ejs:
+    경로: "views/layout.ejs"
+    역할:
+      - "HTML doctype, lang=ko, meta charset, viewport 설정"
+      - "공통 title과 description"
+      - "/styles.css 로드"
+      - "body에 각 화면 body 삽입"
+      - "/site.js defer 로드"
+  index_ejs:
+    경로: "views/index.ejs"
+    역할: "공개 랜딩 페이지 전체"
+    주요_섹션:
+      site_header:
+        설명: "상단 sticky 헤더"
+        링크:
+          - "일정"
+          - "지원현황"
+          - "왜 클래식인가요"
+          - "진행 방식"
+          - "Instagram"
+          - "FAQ"
+        CTA: "신청 가능 여부에 따라 링크 또는 disabled span"
+      hero:
+        설명: "브랜드와 핵심 카피, 배지, CTA, 대표 이미지"
+        이미지: "/assets/images/classic-salon-hero.jpg"
+      event:
+        조건: "featuredEvent가 있을 때 렌더링"
+        내용:
+          - "기수 라벨"
+          - "행사 제목"
+          - "날짜/장소/정원/조건"
+          - "시간 슬롯"
+          - "참가비"
+          - "상태 pill"
+      application_status:
+        설명: "Notion 지원현황 링크와 남녀 지원 요약"
+      why_classic:
+        설명: "클래식 취향 기반 만남의 차별점"
+        이미지:
+          - "/assets/images/rotation-conversation.jpg"
+          - "/assets/images/classic-detail.jpg"
+      process:
+        설명: "신청부터 후속 확인까지 6단계"
+      participants:
+        설명: "참여자 직업/배경 예시 chip"
+      instagram:
+        설명: "Instagram 프로필 정보와 릴스 preview card"
+        preview_images:
+          - "/assets/images/classic-salon-hero.jpg"
+          - "/assets/images/rotation-conversation.jpg"
+          - "/assets/images/classic-detail.jpg"
+      faq:
+        설명: "details/summary 기반 FAQ"
+      footer:
+        설명: "Instagram, domain, contact, 상호/대표/사업자번호, 정책 링크 placeholder"
+      mobile_cta:
+        설명: "모바일 하단 고정 CTA"
+  admin_login_ejs:
+    경로: "views/admin-login.ejs"
+    역할: "관리자 비밀번호 로그인 폼"
+    필드:
+      password: "type=password, autocomplete=current-password"
+    오류표시: "error 값이 있으면 form-error로 출력"
+  admin_dashboard_ejs:
+    경로: "views/admin-dashboard.ejs"
+    역할: "행사와 랜딩 콘텐츠 운영 화면"
+    구성:
+      topbar:
+        - "운영 대시보드 제목"
+        - "신청자 개인정보는 Google Forms에서 관리한다는 안내"
+        - "CSRF hidden input이 있는 로그아웃 폼"
+      등록된_일정_편집:
+        설명: "events 목록을 순회하며 각 행사 편집 폼 표시"
+        기능:
+          - "공개 제목 수정"
+          - "기수 라벨 수정"
+          - "날짜/지역/장소/정원/신청조건 수정"
+          - "모집 상태 선택"
+          - "Google Form 링크 수정"
+          - "시간 슬롯 textarea 수정"
+          - "참가비 textarea 수정"
+          - "대표가 아닌 행사는 대표 지정 버튼 표시"
+      새_일정_추가:
+        설명: "새 행사 생성 폼"
+        기본값:
+          region: "서울 강남권"
+          venueNote: "참여 확정자 개별 안내"
+          capacityNote: "최대 10:10"
+          googleFormUrl: "https://forms.gle/demo"
+          timeSlotsText: "1회차|16:00|18:00"
+          priceRowsText: "기본|35,000원|"
+      홈_콘텐츠_법무정보:
+        설명: "content_blocks 전체 편집 폼"
+        편집가능:
+          - "히어로 라벨/제목/설명/배지"
+          - "참여자 예시"
+          - "지원현황 Notion URL과 남녀 현황"
+          - "Instagram URL/핸들/릴스"
+          - "FAQ"
+          - "상호/대표자/사업자등록번호/문의 채널/도메인"
+
+정적_파일:
+  public_styles_css:
+    경로: "public/styles.css"
+    라인수: 1364
+    역할: "공개 랜딩과 관리자 페이지 전체 스타일"
+    디자인_토큰:
+      colors:
+        storm_gray: "#111118"
+        canvas_white: "#ffffff"
+        pale_mist: "#f0f6ff"
+        electric_blue: "#2727e6"
+        vivid_green: "#16ab59"
+        lemon_zest: "#ffda00"
+        sky_tint: "#e1edff"
+        cool_aqua: "#91d8ec"
+        coral_glow: "#ffbac4"
+        sunset_orange: "#ff7715"
+        flame_red: "#ff4141"
+      fonts:
+        text: "Haas Grot Text, Inter, system-ui"
+        display: "Haas Grot Disp, Neue Haas Grotesk Display, system-ui"
+        mono: "Martian Mono, Space Mono, monospace"
+      radius:
+        cards: "대부분 8px"
+        buttons: "32px 또는 pill"
+        inputs: "5000px pill"
+    공개_페이지_스타일:
+      - "sticky header"
+      - "full-width section + constrained section-inner"
+      - "hero grid"
+      - "event detail cards"
+      - "지원현황 board"
+      - "process grid"
+      - "Instagram reel 9:16 cards"
+      - "FAQ details"
+      - "mobile fixed CTA"
+    반응형:
+      max_width_980:
+        - "주요 2열 grid를 1열로 변경"
+        - "상단 CTA 숨김"
+        - "모바일 하단 CTA 표시"
+      max_width_640:
+        - "본문/제목 크기 축소"
+        - "대부분 버튼을 full width로 변경"
+        - "nav는 지원현황 링크만 유지"
+        - "process/reel/status columns를 1열로 변경"
+      admin_max_width_820:
+        - "관리자 topbar/grid/form/list item을 1열로 변경"
+    접근성_관련:
+      - "focus-visible outline"
+      - "prefers-reduced-motion에서 transition/animation 최소화"
+      - "word-break: keep-all, overflow-wrap: anywhere"
+  public_site_js:
+    경로: "public/site.js"
+    역할: "가벼운 랜딩 인터랙션"
+    동작:
+      - "documentElement에 js class 추가"
+      - "IntersectionObserver가 있으면 .reveal 요소가 보일 때 is-visible class 추가"
+      - "IntersectionObserver가 없으면 reveal 요소를 즉시 표시"
+      - "해시 링크 클릭 시 현재 activeElement blur 처리"
+  이미지:
+    경로: "public/assets/images"
+    파일:
+      classic_salon_hero:
+        path: "public/assets/images/classic-salon-hero.jpg"
+        용도: "히어로 대표 이미지와 일부 릴스 preview"
+      rotation_conversation:
+        path: "public/assets/images/rotation-conversation.jpg"
+        용도: "why-classic 섹션 대화 분위기 이미지와 릴스 preview"
+      classic_detail:
+        path: "public/assets/images/classic-detail.jpg"
+        용도: "악보/악기 디테일 이미지, Instagram avatar, 릴스 preview"
+      README:
+        path: "public/assets/images/README.md"
+        내용:
+          - "현재 이미지는 첫 client presentation용 AI 생성 데모 이미지"
+          - "운영 전 승인된 실제 사진으로 교체 가능"
+          - "파일명을 유지하면 템플릿 수정 없이 교체 가능"
+          - "식별 가능한 얼굴은 명시적 승인 없이는 피해야 함"
+
+프로젝트_문서:
+  docs_deployment_raspberry_pi:
+    경로: "docs/deployment-raspberry-pi.md"
+    내용:
+      - "Raspberry Pi OS 64-bit, Node.js 20+, Nginx, SQLite 전제"
+      - "npm ci --omit=dev 기반 설치"
+      - "production .env 예시"
+      - "systemd 서비스 파일 예시"
+      - "Nginx reverse proxy 설정"
+      - "Certbot HTTPS 설정"
+      - "SQLite 백업 명령"
+      - "DNS/라우터 포트포워딩 안내"
+  docs_security_checklist:
+    경로: "docs/security-checklist.md"
+    핵심:
+      - "HTTPS 전까지 /admin 공개 금지"
+      - "ADMIN_PASSWORD 교체 및 demo 후 rotate"
+      - "긴 SESSION_SECRET 사용"
+      - ".env와 data/*.sqlite Git 제외"
+      - "신청자 개인정보를 앱 DB에 넣지 않기"
+      - "SQLite 백업"
+      - "SSH key login 권장"
+      - "관리자 감사 로그 확인"
+  docs_solution_seed_idempotency:
+    경로: "docs/solutions/best-practices/seed-admin-editable-content-idempotency-2026-05-24.md"
+    내용:
+      - "관리자 수정 가능한 앱에서 seed는 reset script가 아니어야 함"
+      - "시드 row는 기본값 삽입만 하고 운영자 수정값은 보존"
+      - "child row stable ID와 legacy migration 필요"
+      - "반복 시딩 회귀 테스트 권장"
+  docs_superpowers:
+    설명: "초기 설계/구현 계획 기록"
+    파일:
+      - "docs/superpowers/specs/2026-05-24-classic-rotation-landing-design.md"
+      - "docs/superpowers/plans/2026-05-24-classic-rotation-landing.md"
+    실제_구현과의_차이:
+      - "계획 문서에는 public/admin.js가 언급되지만 현재 실제 파일 목록에는 public/admin.js가 없다."
+      - "현재 관리자 페이지는 별도 admin JS 없이 HTML form submit 중심으로 작동한다."
+
+테스트_구성:
+  npm_test:
+    명령: "npm test"
+    실행: "vitest run"
+    범위:
+      - "src 서비스 로직"
+      - "Express route"
+      - "DB schema/seed"
+      - "관리자 인증/관리 기능"
+      - "렌더링 smoke"
+  npm_run_test_browser:
+    명령: "npm run test:browser"
+    실행: "playwright test"
+    범위:
+      - "Desktop Chrome"
+      - "Mobile Safari"
+      - "이미지 로딩"
+      - "수평 overflow 없음"
+      - "CTA/섹션 접근 가능"
+      - "admin login 페이지 렌더링"
+  테스트_파일:
+    tests_render_test_js:
+      역할: "시드 콘텐츠로 공개 페이지가 렌더링되는지 smoke test"
+      확인:
+        - "클래식을 좋아하세요"
+        - "같은 취향이 설렘이 되는 밤"
+        - "서울 강남권"
+        - "이번 기수 신청하기"
+        - "개인정보는 구글폼에서 수집"
+    tests_publicModel_test_js:
+      역할: "공개 모델, CTA 상태, URL 안전 필터링, fallback 검증"
+      확인:
+        - "open/closing-soon/closed/scheduled/hidden 상태별 CTA"
+        - "대표 행사 조건"
+        - "Google Form URL만 공개"
+        - "Instagram/지원현황 URL은 https만 공개"
+        - "잘못된 content JSON shape fallback"
+        - "공개 모델에 admin session/applicant 관련 문자열 미포함"
+    tests_db_test_js:
+      역할: "DB 시딩과 스키마 제약 검증"
+      확인:
+        - "대표 행사 1개 시드"
+        - "시간 슬롯과 가격 row 시드"
+        - "필수 content block 생성"
+        - "반복 시딩 시 관리자 수정 보존"
+        - "legacy random-id child row를 stable ID로 migration/prune"
+        - "대표 행사는 하나만 허용"
+    tests_adminAuth_test_js:
+      역할: "관리자 로그인/세션/비밀번호 비교 검증"
+      확인:
+        - "미인증 /admin 접근 시 /admin/login redirect"
+        - "틀린 비밀번호 401"
+        - "정상 로그인 시 HttpOnly/SameSite=Lax 쿠키 발급"
+        - "길이가 다른 비밀번호 비교도 예외 없이 false"
+    tests_adminManagement_test_js:
+      역할: "관리자 CRUD와 콘텐츠 수정 통합 테스트"
+      확인:
+        - "대표 행사 수정 후 공개 페이지 반영"
+        - "Google Forms URL 검증"
+        - "hidden/scheduled/closed 상태에서 admin에는 URL 보존, 공개 href는 숨김"
+        - "새 일정 생성과 대표 지정"
+        - "비대표 일정 수정 시 공개 대표 행사는 유지"
+        - "시간/가격 row 수정"
+        - "잘못된 포맷은 부분 업데이트 없이 400"
+        - "create/feature/content route CSRF 필수"
+        - "랜딩 콘텐츠/법무 정보 수정 반영"
+    tests_playwright_landing_spec_js:
+      역할: "브라우저 기반 화면 테스트"
+      확인:
+        - "랜딩 제목, 배지, CTA, 이미지 표시"
+        - "이미지 파일 실제 응답과 content-type image 확인"
+        - "일정/지원현황/진행방식/FAQ/footer reachable"
+        - "Instagram reel card 4개"
+        - "admin login 페이지 표시"
+
+실행_방법:
+  로컬_설치:
+    - "npm install"
+    - "cp .env.example .env"
+    - ".env에서 ADMIN_PASSWORD와 SESSION_SECRET 수정 권장"
+  DB_초기화:
+    명령: "npm run db:seed"
+    설명: "data/classic-rotation.sqlite에 기본 데이터 생성 또는 누락 기본값 보강"
+  개발_서버:
+    명령: "npm run dev"
+    설명: "node --watch server.js로 변경 감지 실행"
+    기본_URL:
+      public: "http://localhost:3000"
+      admin: "http://localhost:3000/admin"
+  운영_서버:
+    명령: "npm run start"
+    설명: "server.js 실행"
+  테스트:
+    unit_integration: "npm test"
+    browser: "npm run test:browser"
+
+운영_및_배포:
+  권장_구성:
+    - "Raspberry Pi OS 64-bit"
+    - "Node.js 20 이상"
+    - "Nginx reverse proxy"
+    - "SQLite DB는 Git 밖의 data 경로 또는 /var/www/.../data 경로"
+    - "PUBLIC_BASE_URL은 실제 https 도메인"
+  production_env:
+    NODE_ENV: "production"
+    PORT: "3000"
+    DATABASE_PATH: "/var/www/classic-rotation/data/classic-rotation.sqlite"
+    ADMIN_PASSWORD: "강한 관리자 비밀번호"
+    SESSION_SECRET: "openssl rand -hex 32 등으로 생성한 긴 랜덤 문자열"
+    PUBLIC_BASE_URL: "https://www.doyoulikeclassic.com"
+  HTTPS:
+    중요도: "높음"
+    이유:
+      - "admin_session 쿠키와 관리자 비밀번호 보호"
+      - "production에서는 secure cookie 사용"
+    문서: "docs/deployment-raspberry-pi.md"
+  백업:
+    대상: "SQLite DB 파일"
+    이유: "행사/콘텐츠/관리자 세션/감사로그가 DB에 저장되기 때문"
+
+보안_체크리스트_요약:
+  반드시_확인:
+    - "production 전에 ADMIN_PASSWORD를 placeholder가 아닌 값으로 변경"
+    - "SESSION_SECRET을 긴 랜덤 문자열로 변경"
+    - "HTTPS 적용 전 /admin 공개 공유 금지"
+    - ".env와 data/*.sqlite를 커밋하지 않기"
+    - "신청자 개인정보는 Google Forms에서만 관리"
+    - "운영 전 데모 이미지를 승인된 실제 이미지로 교체할지 검토"
+    - "배포/수정 전 SQLite 백업"
+    - "데모 후 관리자 비밀번호 rotate"
+  현재_코드가_제공하는_보호:
+    - "Helmet 기본 헤더"
+    - "관리자 로그인 rate limit"
+    - "HttpOnly signed cookie"
+    - "production secure cookie"
+    - "CSRF 토큰"
+    - "세션 원본 토큰 미저장"
+    - "Google Forms URL allowlist"
+    - "https URL 필터링"
+    - "Zod 입력 검증"
+    - "관리자 감사 로그"
+
+현재_구현상_알아둘_점:
+  신청자_데이터:
+    상태: "저장하지 않음"
+    신청_흐름: "Google Forms 외부 링크"
+    후속_운영: "운영자가 수동으로 검토/연락/결제 안내"
+  관리자_계정:
+    상태: "다중 계정/역할 없음"
+    방식: "단일 ADMIN_PASSWORD"
+    적합한_규모: "소규모 운영자용 B-lite admin"
+  콘텐츠_관리:
+    방식: "DB의 content_blocks JSON"
+    장점: "HTML 수정 없이 주요 문구/FAQ/링크 수정 가능"
+    한계: "복잡한 CMS 워크플로, 권한, 미리보기, 버전관리는 없음"
+  행사_관리:
+    가능:
+      - "여러 일정 저장"
+      - "하나의 대표 일정 지정"
+      - "시간 슬롯/가격 행 수정"
+      - "상태별 CTA 제어"
+    불가능:
+      - "참가자 관리"
+      - "결제 처리"
+      - "매칭 자동화"
+      - "문자/메일 발송 자동화"
+  시딩:
+    장점:
+      - "처음 실행 시 바로 데모 가능한 기본 데이터 생성"
+      - "관리자 수정 후 반복 실행해도 수정값 보존"
+    주의:
+      - "시드는 운영 데이터 백업 대체가 아니다."
+      - "프로덕션 DB 삭제 후 재실행하면 기본값으로 다시 시작한다."
+  public_admin_js:
+    상태: "현재 없음"
+    설명: "관리자 화면은 별도 JS 없이 서버 렌더링 폼과 POST redirect로 작동한다."
+
+파일별_역할_목록:
+  src/app.js: "Express 앱 구성, DB 연결, 공통 미들웨어, 라우터 연결"
+  src/config.js: "환경 변수와 override를 config 객체로 정규화, production secret 검증"
+  src/db/database.js: "SQLite 연결, schema.sql 실행, 트랜잭션 helper"
+  src/db/schema.sql: "events, event_time_slots, event_price_rows, content_blocks, admin_sessions, admin_audit_log 정의"
+  src/db/seed.js: "기본 행사/콘텐츠 삽입, 반복 시딩 안전성 보장"
+  src/routes/public.js: "GET / 공개 랜딩 렌더링"
+  src/routes/admin.js: "관리자 로그인, 로그아웃, 대시보드, 행사/콘텐츠 변경 route"
+  src/middleware/adminAuth.js: "관리자 세션 연결, 인증 필수 처리, CSRF 검증"
+  src/services/publicModel.js: "공개 화면 모델 생성, 대표 행사 선택, CTA/URL/content fallback 처리"
+  src/services/adminService.js: "관리자 입력 검증, 행사 생성/수정/대표 지정, 콘텐츠 저장"
+  src/services/security.js: "비밀번호 안전 비교, 세션 토큰 HMAC 해시, 세션 생성/조회/삭제"
+  views/layout.ejs: "공통 HTML layout"
+  views/index.ejs: "공개 랜딩 화면"
+  views/admin-login.ejs: "관리자 로그인 화면"
+  views/admin-dashboard.ejs: "관리자 대시보드 화면"
+  public/styles.css: "전체 UI 스타일과 반응형 CSS"
+  public/site.js: "reveal 애니메이션과 anchor blur 처리"
+  public/assets/images/README.md: "데모 이미지 설명과 교체 가이드"
+  tests/render.test.js: "공개 렌더링 smoke test"
+  tests/publicModel.test.js: "공개 모델과 URL/content 안전성 테스트"
+  tests/db.test.js: "DB 시드와 제약 테스트"
+  tests/config.test.js: "환경 설정과 production secret 검증 테스트"
+  tests/adminAuth.test.js: "관리자 인증 테스트"
+  tests/adminManagement.test.js: "관리자 행사/콘텐츠 관리 통합 테스트"
+  tests/playwright/landing.spec.js: "브라우저 기반 랜딩/관리자 로그인 화면 테스트"
+  docs/deployment-raspberry-pi.md: "Raspberry Pi 배포 문서"
+  docs/security-checklist.md: "운영 보안 체크리스트"
+  docs/solutions/best-practices/seed-admin-editable-content-idempotency-2026-05-24.md: "시드 데이터 idempotency best practice"
+  docs/superpowers/specs/2026-05-24-classic-rotation-landing-design.md: "초기 디자인/기능 스펙"
+  docs/superpowers/plans/2026-05-24-classic-rotation-landing.md: "초기 구현 계획"

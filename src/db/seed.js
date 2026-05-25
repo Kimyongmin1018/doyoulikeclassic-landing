@@ -92,11 +92,11 @@ const contentBlocks = {
     }
   ],
   legal: {
-    businessName: "상호명 입력 예정",
-    representative: "대표자 입력 예정",
-    registrationNumber: "사업자등록번호 입력 예정",
+    businessName: "",
+    representative: "이채연",
+    registrationNumber: "",
     contact: "문의 채널 입력 예정",
-    domain: "www.doyoulikeclassic.com"
+    domain: "http://doyoulikeclassic.com/"
   }
 };
 
