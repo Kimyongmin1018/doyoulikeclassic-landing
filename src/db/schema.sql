@@ -60,3 +60,16 @@ create table if not exists admin_audit_log (
   ip_address text not null default '',
   created_at text not null default (datetime('now'))
 );
+
+create table if not exists traffic_visits (
+  visitor_hash text not null,
+  hour_bucket text not null,
+  path text not null default '/',
+  visit_count integer not null default 1,
+  first_seen_at text not null default (datetime('now')),
+  last_seen_at text not null default (datetime('now')),
+  primary key (visitor_hash, hour_bucket, path)
+);
+
+create index if not exists traffic_visits_hour_bucket
+on traffic_visits(hour_bucket);

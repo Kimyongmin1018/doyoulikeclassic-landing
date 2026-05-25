@@ -12,6 +12,7 @@ import {
 } from "../services/adminService.js";
 import { buildPublicModel } from "../services/publicModel.js";
 import { createSession, destroySession, safeCompareText } from "../services/security.js";
+import { getTrafficLog } from "../services/trafficService.js";
 
 export const adminRouter = Router();
 
@@ -47,6 +48,7 @@ function renderDashboard(request, response, next, options = {}) {
   const model = buildPublicModel(request.db);
   const events = listEvents(request.db);
   const adminContent = getContentForAdmin(request.db);
+  const trafficLog = getTrafficLog(request.db);
 
   renderWithLayout(
     response,
@@ -57,6 +59,7 @@ function renderDashboard(request, response, next, options = {}) {
       model,
       events,
       adminContent,
+      trafficLog,
       error: options.error || ""
     },
     next

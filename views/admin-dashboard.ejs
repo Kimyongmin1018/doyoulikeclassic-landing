@@ -162,6 +162,10 @@
       <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
 
       <label>
+        상단 로고 텍스트
+        <input name="headerTitle" value="<%= adminContent.headerTitle %>" required maxlength="40">
+      </label>
+      <label>
         히어로 라벨
         <input name="heroEyebrow" value="<%= adminContent.heroEyebrow %>" required maxlength="80">
       </label>
@@ -176,6 +180,10 @@
       <label>
         히어로 배지
         <textarea name="heroBadgesText" required maxlength="500"><%= adminContent.heroBadgesText %></textarea>
+      </label>
+      <label>
+        다음 기수 CTA 라벨
+        <input name="nextCtaLabel" value="<%= adminContent.nextCtaLabel %>" required maxlength="40">
       </label>
       <label>
         참여자 예시
@@ -226,16 +234,16 @@
         <textarea name="faqText" required maxlength="3000"><%= adminContent.faqText %></textarea>
       </label>
       <label>
-        상호명
-        <input name="businessName" value="<%= adminContent.businessName %>" required maxlength="80">
+        푸터 제목
+        <input name="footerTitle" value="<%= adminContent.footerTitle %>" required maxlength="80">
+      </label>
+      <label class="admin-form-wide">
+        푸터 설명
+        <input name="footerDescription" value="<%= adminContent.footerDescription %>" required maxlength="160">
       </label>
       <label>
         대표자
         <input name="representative" value="<%= adminContent.representative %>" required maxlength="80">
-      </label>
-      <label>
-        사업자등록번호
-        <input name="registrationNumber" value="<%= adminContent.registrationNumber %>" required maxlength="80">
       </label>
       <label>
         문의 채널
@@ -248,5 +256,54 @@
 
       <button class="button button-primary admin-form-wide" type="submit">콘텐츠 저장</button>
     </form>
+  </section>
+
+  <section class="admin-card traffic-log" aria-labelledby="traffic-log-title">
+    <div class="traffic-log-header">
+      <div>
+        <p class="eyebrow">Traffic Log</p>
+        <h2 id="traffic-log-title">시간대별 홈페이지 접속</h2>
+        <p>최근 <%= trafficLog.hours %>시간 기준입니다. 익명 브라우저 쿠키로 시간대별 고유 방문자와 페이지뷰만 집계합니다.</p>
+      </div>
+      <div class="traffic-summary">
+        <span><strong><%= trafficLog.totalUniqueVisitors %></strong><small>시간대별 방문자 합계</small></span>
+        <span><strong><%= trafficLog.totalPageViews %></strong><small>페이지뷰 합계</small></span>
+        <span><strong><%= trafficLog.busiestHour?.uniqueVisitors || 0 %></strong><small>최고 시간대 방문자</small></span>
+      </div>
+    </div>
+
+    <div class="traffic-chart" aria-label="최근 시간대별 방문자 막대그래프">
+      <% trafficLog.rows.forEach((row) => { %>
+        <div class="traffic-bar-column" title="<%= row.fullLabel %> · 방문자 <%= row.uniqueVisitors %>명 · 페이지뷰 <%= row.pageViews %>">
+          <span class="traffic-bar" style="height: <%= row.barPercent %>%"></span>
+          <small><%= row.hourLabel %></small>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="traffic-table-wrap">
+      <table class="traffic-table">
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>요일</th>
+            <th>시간</th>
+            <th>고유 방문자</th>
+            <th>페이지뷰</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% trafficLog.rows.slice().reverse().forEach((row) => { %>
+            <tr>
+              <td><%= row.dateLabel %></td>
+              <td><%= row.weekdayLabel %></td>
+              <td><%= row.hourLabel %></td>
+              <td><%= row.uniqueVisitors %></td>
+              <td><%= row.pageViews %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
   </section>
 </main>

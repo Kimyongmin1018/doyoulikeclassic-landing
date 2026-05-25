@@ -17,18 +17,23 @@ const priceRows = [
 
 const contentBlocks = {
   hero: {
+    headerTitle: "클래식을 좋아하세요?",
     eyebrow: "국내 최초 클래식 로테이션 소개팅",
     headline: "클래식을 좋아하세요..? 같은 취향이 설렘이 되는 밤.",
     subheadline:
       "클래식을 사랑하는 사람들이 자연스럽게 연결되는 특별한 만남입니다. 좋아하는 음악과 공연 이야기를 나누며 짧지만 깊은 대화 속에서 서로의 분위기와 취향을 알아갑니다.",
-    badges: ["누적 신청자 500명 이상", "5-10명 순차 대화", "서울 강남권", "선정자 개별 안내"]
+    badges: ["누적 신청자 500명 이상", "5-10명 순차 대화", "서울 강남권", "선정자 개별 안내"],
+    nextCtaLabel: "다음기수 신청하기"
   },
   participants: [
     "클래식 전공자",
     "개발자",
     "교사",
     "연구원",
-    "금융권 종사자"
+    "금융권 종사자",
+    "엔지니어",
+    "디자이너",
+    "기획자"
   ],
   applicationStatus: {
     url: "https://doyoulikeclassic.notion.site/27281544f0928301a650015e4373f855",
@@ -92,10 +97,12 @@ const contentBlocks = {
     }
   ],
   legal: {
+    footerTitle: "클래식을 좋아하세요..?",
+    footerDescription: "서울 강남권에서 열리는 국내 최초 클래식 취향 기반 로테이션 소개팅",
     businessName: "",
     representative: "이채연",
     registrationNumber: "",
-    contact: "문의 채널 입력 예정",
+    contact: "Q&A 챗봇",
     domain: "http://doyoulikeclassic.com/"
   }
 };

@@ -31,6 +31,7 @@ function eventPayload(overrides = {}) {
 
 function contentPayload(overrides = {}) {
   return {
+    headerTitle: "클래식을 좋아하세요?",
     heroEyebrow: "취향이 만나는 테스트 살롱",
     heroHeadline: "클래식으로 시작하는 새로운 인연",
     heroSubheadline: "서울 강남권에서 만나는 취향 기반 로테이션 소개팅",
@@ -50,7 +51,7 @@ function contentPayload(overrides = {}) {
     businessName: "테스트 클래식 살롱",
     representative: "홍길동",
     registrationNumber: "123-45-67890",
-    contact: "hello@doyoulikeclassic.com",
+    contact: "Q&A 챗봇",
     domain: "demo.doyoulikeclassic.com",
     ...overrides
   };
@@ -400,7 +401,9 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("https://www.instagram.com/reel/demo-two");
     expect(publicPage.text).toContain("신청은 어떻게 하나요?");
     expect(publicPage.text).toContain("선정자에게 개별 안내합니다.");
-    expect(publicPage.text).toContain("hello@doyoulikeclassic.com");
+    expect(publicPage.text).toContain("Q&amp;A 챗봇");
+    expect(publicPage.text).toContain("궁금한 점은 챗봇에게 바로 물어보세요.");
+    expect(publicPage.text).toContain("FAQ와 현재 행사 정보 기준");
     expect(publicPage.text).toContain("demo.doyoulikeclassic.com");
     expect(publicPage.text).toContain("홍길동");
     expect(publicPage.text).not.toContain("테스트 클래식 살롱");

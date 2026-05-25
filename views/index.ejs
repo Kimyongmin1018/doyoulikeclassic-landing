@@ -4,6 +4,42 @@
   const ctaLabel = featuredEvent?.cta.label || "신청 오픈 예정";
   const canApply = Boolean(ctaHref);
   const applicationStatus = model.content.applicationStatus;
+  const headerTitle = model.content.hero.headerTitle || "클래식을 좋아하세요?";
+  const nextCtaLabel = model.content.hero.nextCtaLabel || "다음기수 신청하기";
+  const participants = model.content.participants;
+  const participantsSummary = participants.length
+    ? `${participants.join(", ")}까지 다양한 사람들이 공연과 음악 이야기를 매개로 만났습니다.`
+    : "다양한 사람들이 공연과 음악 이야기를 매개로 만났습니다.";
+  const footerTitle = model.content.legal.footerTitle || "클래식을 좋아하세요..?";
+  const footerDescription = model.content.legal.footerDescription || "서울 강남권에서 열리는 국내 최초 클래식 취향 기반 로테이션 소개팅";
+  const chatbotQuickReplies = ["신청 방법", "일정", "장소", "참가비", "지원현황", "개인정보"];
+  const chatbotData = {
+    applyUrl: ctaHref,
+    applyLabel: ctaLabel,
+    applicationStatusUrl: applicationStatus.url || "",
+    applicationStatusUpdatedLabel: applicationStatus.updatedLabel || "",
+    applicationStatusMaleSummary: applicationStatus.maleSummary || "",
+    applicationStatusFemaleSummary: applicationStatus.femaleSummary || "",
+    instagramUrl: model.content.instagram.url || "",
+    faq: model.content.faq || [],
+    event: featuredEvent
+      ? {
+          title: featuredEvent.publicTitle,
+          generationLabel: featuredEvent.generationLabel,
+          eventDate: featuredEvent.eventDate,
+          region: featuredEvent.region,
+          venueNote: featuredEvent.venueNote,
+          capacityNote: featuredEvent.capacityNote,
+          applicationConditions: featuredEvent.applicationConditions,
+          timeSlots: featuredEvent.timeSlots.map((slot) => `${slot.label} ${slot.startsAt}-${slot.endsAt}`),
+          priceRows: featuredEvent.priceRows.map((price) => `${price.label} ${price.amount}${price.note ? ` (${price.note})` : ""}`)
+        }
+      : null
+  };
+  const chatbotJson = JSON.stringify(chatbotData)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
   const reelPreviewImages = [
     "/assets/images/classic-salon-hero.jpg",
     "/assets/images/rotation-conversation.jpg",
@@ -19,7 +55,10 @@
 %>
 
 <header class="site-header">
-  <a class="wordmark" href="#top" aria-label="클래식을 좋아하세요 홈">클래식을 좋아하세요</a>
+  <a class="wordmark" href="#top" aria-label="<%= headerTitle %> 홈">
+    <img class="wordmark-logo" src="/assets/images/doyoulikeclassic-logo.jpg" alt="">
+    <span><%= headerTitle %></span>
+  </a>
   <nav class="nav-links" aria-label="주요 섹션">
     <a href="#event">일정</a>
     <a href="#application-status">지원현황</a>
@@ -27,6 +66,7 @@
     <a href="#process">진행 방식</a>
     <a href="#instagram">Instagram</a>
     <a href="#faq">FAQ</a>
+    <a href="#chatbot" data-chatbot-open>문의</a>
   </nav>
   <% if (canApply) { %>
     <a class="button button-primary" href="<%= ctaHref %>" target="_blank" rel="noreferrer"><%= ctaLabel %></a>
@@ -84,7 +124,7 @@
             <% } else { %>
               <span class="button button-disabled" aria-disabled="true"><%= ctaLabel %></span>
             <% } %>
-            <span class="status-pill"><%= featuredEvent.cta.label %></span>
+            <span class="button button-white event-next-button" aria-disabled="true"><%= nextCtaLabel %></span>
           </div>
         </div>
         <div class="event-details reveal" aria-label="시간과 참가비">
@@ -217,11 +257,11 @@
       <div class="reveal">
         <p class="eyebrow">Participants</p>
         <h2 id="participants-title">각자의 일상은 다르지만, 음악을 사랑하는 마음은 같습니다.</h2>
-        <p class="section-copy">클래식 전공자부터 개발자, 교사, 연구원, 금융권 종사자까지 다양한 사람들이 공연과 음악 이야기를 매개로 만났습니다.</p>
+        <p class="section-copy"><%= participantsSummary %></p>
       </div>
       <div class="participant-cloud reveal" aria-label="참여자 예시">
-        <% model.content.participants.forEach((participant, index) => { %>
-          <span class="participant-chip chip-<%= index % 5 %>"><%= participant %></span>
+        <% participants.forEach((participant, index) => { %>
+          <span class="participant-chip chip-<%= index % 8 %>"><%= participant %></span>
         <% }) %>
       </div>
     </div>
@@ -230,9 +270,9 @@
   <section id="instagram" class="section instagram-section" aria-labelledby="instagram-title">
     <div class="section-inner instagram-shell">
       <div class="instagram-profile reveal">
-      <div class="instagram-avatar" aria-hidden="true">
+        <div class="instagram-avatar" aria-hidden="true">
           <img src="/assets/images/doyoulikeclassic-logo.jpg" alt="">
-      </div>
+        </div>
         <div class="instagram-profile-copy">
           <p class="eyebrow instagram-eyebrow">Instagram</p>
           <h2 id="instagram-title">Instagram에서 먼저 만나는 클래식 살롱</h2>
@@ -290,24 +330,70 @@
       </div>
     </div>
   </section>
+
+  <section id="contact" class="section chatbot-section" aria-labelledby="contact-title">
+    <div class="section-inner chatbot-panel-inline reveal">
+      <div>
+        <p class="eyebrow">Q&amp;A</p>
+        <h2 id="contact-title">궁금한 점은 챗봇에게 바로 물어보세요.</h2>
+        <p class="section-copy">신청 방법, 일정, 장소, 참가비, 지원현황은 현재 홈페이지 정보와 FAQ를 기준으로 자동 안내합니다.</p>
+      </div>
+      <div class="chatbot-inline-action">
+        <button class="button button-primary" type="button" data-chatbot-open>Q&amp;A 챗봇 열기</button>
+        <small>답변 내용은 관리자 화면의 FAQ와 행사 정보 수정 내용이 반영됩니다.</small>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer class="site-footer">
   <div class="section-inner footer-grid">
     <div>
-      <strong>클래식을 좋아하세요..?</strong>
-      <p>서울 강남권에서 열리는 클래식 취향 기반 로테이션 소개팅</p>
+      <strong><%= footerTitle %></strong>
+      <p><%= footerDescription %></p>
     </div>
-    <dl>
+    <dl class="footer-info-grid">
       <div><dt>Instagram</dt><dd><a href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer"><%= model.content.instagram.handle %></a></dd></div>
       <div><dt>Domain</dt><dd><%= model.content.legal.domain || "http://doyoulikeclassic.com/" %></dd></div>
-      <div><dt>Contact</dt><dd><%= model.content.legal.contact || "문의 채널 입력 예정" %></dd></div>
-    </dl>
-    <dl>
+      <div>
+        <dt>Contact</dt>
+        <dd>
+          <a href="#chatbot" data-chatbot-open><%= model.content.legal.contact || "Q&A 챗봇" %></a>
+        </dd>
+      </div>
       <div><dt>대표</dt><dd><%= model.content.legal.representative || "이채연" %></dd></div>
     </dl>
   </div>
 </footer>
+
+<script type="application/json" id="chatbot-data"><%- chatbotJson %></script>
+
+<div id="chatbot" class="chatbot-widget" data-chatbot-widget>
+  <button class="chatbot-launcher" type="button" data-chatbot-toggle aria-expanded="false" aria-controls="chatbot-panel">
+    <span>Q&amp;A</span>
+    <strong>챗봇</strong>
+  </button>
+  <section id="chatbot-panel" class="chatbot-window" aria-label="Q&A 챗봇" hidden>
+    <header class="chatbot-header">
+      <div>
+        <strong>Q&amp;A 챗봇</strong>
+        <small>FAQ와 현재 행사 정보 기준</small>
+      </div>
+      <button type="button" data-chatbot-close>닫기</button>
+    </header>
+    <div class="chatbot-messages" data-chatbot-messages aria-live="polite"></div>
+    <div class="chatbot-quick-replies" aria-label="빠른 질문">
+      <% chatbotQuickReplies.forEach((reply) => { %>
+        <button type="button" data-chatbot-query="<%= reply %>"><%= reply %></button>
+      <% }) %>
+    </div>
+    <form class="chatbot-form" data-chatbot-form>
+      <label for="chatbot-input">질문 입력</label>
+      <input id="chatbot-input" name="message" placeholder="예: 신청은 어떻게 하나요?" autocomplete="off">
+      <button type="submit">보내기</button>
+    </form>
+  </section>
+</div>
 
 <div class="mobile-cta" aria-label="모바일 신청 버튼">
   <% if (canApply) { %>

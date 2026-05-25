@@ -9,7 +9,7 @@ const ctaStates = {
 };
 
 const contentFallbacks = {
-  hero: { headline: "", subheadline: "", badges: [] },
+  hero: { headerTitle: "", eyebrow: "", headline: "", subheadline: "", badges: [], nextCtaLabel: "" },
   participants: [],
   applicationStatus: {
     url: "",
@@ -27,10 +27,12 @@ const contentFallbacks = {
 
 const contentSchemas = {
   hero: z.object({
+    headerTitle: z.string().optional(),
     eyebrow: z.string().optional(),
     headline: z.string(),
     subheadline: z.string(),
-    badges: z.array(z.string())
+    badges: z.array(z.string()),
+    nextCtaLabel: z.string().optional()
   }),
   participants: z.array(z.string()),
   applicationStatus: z.object({

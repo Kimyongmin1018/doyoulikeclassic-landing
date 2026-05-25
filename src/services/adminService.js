@@ -35,10 +35,12 @@ export const eventInputSchema = z.object({
 });
 
 export const contentInputSchema = z.object({
+  headerTitle: z.string().trim().min(1).max(40).optional().default("클래식을 좋아하세요?"),
   heroEyebrow: z.string().trim().min(1).max(80),
   heroHeadline: z.string().trim().min(1).max(140),
   heroSubheadline: z.string().trim().min(1).max(500),
   heroBadgesText: z.string().trim().min(1).max(500),
+  nextCtaLabel: z.string().trim().min(1).max(40).optional().default("다음기수 신청하기"),
   participantsText: z.string().trim().min(1).max(500),
   applicationStatusUrl: httpsUrl,
   applicationStatusUpdatedLabel: z.string().trim().min(1).max(80),
@@ -51,9 +53,11 @@ export const contentInputSchema = z.object({
   instagramHandle: z.string().trim().min(1).max(60),
   instagramReelsText: z.string().trim().max(1200).optional().default(""),
   faqText: z.string().trim().min(1).max(3000),
-  businessName: z.string().trim().min(1).max(80),
+  footerTitle: z.string().trim().min(1).max(80).optional().default("클래식을 좋아하세요..?"),
+  footerDescription: z.string().trim().min(1).max(160).optional().default("서울 강남권에서 열리는 국내 최초 클래식 취향 기반 로테이션 소개팅"),
+  businessName: z.string().trim().max(80).optional().default(""),
   representative: z.string().trim().min(1).max(80),
-  registrationNumber: z.string().trim().min(1).max(80),
+  registrationNumber: z.string().trim().max(80).optional().default(""),
   contact: z.string().trim().min(1).max(120),
   domain: z.string().trim().min(1).max(80)
 });
@@ -270,10 +274,12 @@ export function getContentForAdmin(db) {
   const legal = readJsonBlock(db, "legal", {});
 
   return {
+    headerTitle: typeof hero.headerTitle === "string" ? hero.headerTitle : "클래식을 좋아하세요?",
     heroEyebrow: typeof hero.eyebrow === "string" ? hero.eyebrow : "",
     heroHeadline: typeof hero.headline === "string" ? hero.headline : "",
     heroSubheadline: typeof hero.subheadline === "string" ? hero.subheadline : "",
     heroBadgesText: serializeLines(normalizeArray(hero.badges)),
+    nextCtaLabel: typeof hero.nextCtaLabel === "string" ? hero.nextCtaLabel : "다음기수 신청하기",
     participantsText: serializeLines(normalizeArray(participants)),
     applicationStatusUrl: typeof applicationStatus.url === "string" ? applicationStatus.url : "",
     applicationStatusUpdatedLabel: typeof applicationStatus.updatedLabel === "string" ? applicationStatus.updatedLabel : "",
@@ -286,11 +292,15 @@ export function getContentForAdmin(db) {
     instagramHandle: typeof instagram.handle === "string" ? instagram.handle : "",
     instagramReelsText: serializeLines(normalizeArray(instagram.reels)),
     faqText: serializeFaqText(normalizeFaq(faq)),
+    footerTitle: typeof legal.footerTitle === "string" ? legal.footerTitle : "클래식을 좋아하세요..?",
+    footerDescription: typeof legal.footerDescription === "string"
+      ? legal.footerDescription
+      : "서울 강남권에서 열리는 국내 최초 클래식 취향 기반 로테이션 소개팅",
     businessName: typeof legal.businessName === "string" ? legal.businessName : "",
     representative: typeof legal.representative === "string" ? legal.representative : "",
     registrationNumber: typeof legal.registrationNumber === "string" ? legal.registrationNumber : "",
     contact: typeof legal.contact === "string" ? legal.contact : "",
-    domain: typeof legal.domain === "string" ? legal.domain : "www.doyoulikeclassic.com"
+    domain: typeof legal.domain === "string" ? legal.domain : "http://doyoulikeclassic.com/"
   };
 }
 
@@ -436,14 +446,22 @@ export function updateContent(db, input) {
   const currentApplicationStatus = readJsonBlock(db, "applicationStatus", {});
   const currentInstagram = readJsonBlock(db, "instagram", {});
   const currentLegal = readJsonBlock(db, "legal", {});
+  const {
+    kakaoChatUrl: _kakaoChatUrl,
+    kakaoButtonLabel: _kakaoButtonLabel,
+    kakaoDescription: _kakaoDescription,
+    ...legalWithoutKakao
+  } = currentLegal;
 
   return db.transaction(() => {
     upsertContentBlock(db, "hero", {
       ...currentHero,
+      headerTitle: data.headerTitle,
       eyebrow: data.heroEyebrow,
       headline: data.heroHeadline,
       subheadline: data.heroSubheadline,
-      badges
+      badges,
+      nextCtaLabel: data.nextCtaLabel
     });
     upsertContentBlock(db, "participants", participants);
     upsertContentBlock(db, "applicationStatus", {
@@ -464,7 +482,9 @@ export function updateContent(db, input) {
     });
     upsertContentBlock(db, "faq", faq);
     upsertContentBlock(db, "legal", {
-      ...currentLegal,
+      ...legalWithoutKakao,
+      footerTitle: data.footerTitle,
+      footerDescription: data.footerDescription,
       businessName: data.businessName,
       representative: data.representative,
       registrationNumber: data.registrationNumber,
