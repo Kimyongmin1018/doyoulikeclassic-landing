@@ -35,7 +35,7 @@ export const eventInputSchema = z.object({
 });
 
 export const contentInputSchema = z.object({
-  headerTitle: z.string().trim().min(1).max(40).optional().default("클래식을 좋아하세요?"),
+  headerTitle: z.string().trim().min(1).max(40).optional().default("클래식을 좋아하세요..?"),
   heroEyebrow: z.string().trim().min(1).max(80),
   heroHeadline: z.string().trim().min(1).max(140),
   heroSubheadline: z.string().trim().min(1).max(500),
@@ -274,7 +274,7 @@ export function getContentForAdmin(db) {
   const legal = readJsonBlock(db, "legal", {});
 
   return {
-    headerTitle: typeof hero.headerTitle === "string" ? hero.headerTitle : "클래식을 좋아하세요?",
+    headerTitle: typeof hero.headerTitle === "string" ? hero.headerTitle : "클래식을 좋아하세요..?",
     heroEyebrow: typeof hero.eyebrow === "string" ? hero.eyebrow : "",
     heroHeadline: typeof hero.headline === "string" ? hero.headline : "",
     heroSubheadline: typeof hero.subheadline === "string" ? hero.subheadline : "",

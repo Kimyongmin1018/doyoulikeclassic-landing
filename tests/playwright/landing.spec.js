@@ -48,13 +48,13 @@ test("event, process, faq, and footer sections are reachable", async ({ page }) 
   await expect(page.getByText("35,000원").first()).toBeVisible();
 
   await page.getByRole("link", { name: "지원현황", exact: true }).click();
-  await expect(page.getByRole("heading", { name: /지원현황을 확인하고/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "이전 기수 참가자 데이터" })).toBeVisible();
   await expect(page.getByText("남자 17명")).toBeVisible();
   await expect(page.getByText("여자 20명")).toBeVisible();
 
   await page.getByRole("link", { name: "진행 방식", exact: true }).click();
   await expect(page.getByRole("heading", { name: /신청부터 만남까지/ })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "처음 신청하는 분들이 자주 묻는 질문" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "자주 묻는 질문" })).toBeVisible();
   await expect(page.getByText("http://doyoulikeclassic.com/")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
@@ -63,7 +63,9 @@ test("instagram section presents reel previews", async ({ page }) => {
   await page.goto("/");
 
   await page.getByRole("link", { name: "Instagram", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Instagram에서 먼저 만나는 클래식 살롱" })).toBeVisible();
+  await expect(page.getByRole("heading", {
+    name: /인스타그램에서\s*현장 분위기, 다음 기수 모집 소식을\s*빠르게 확인해보세요\./
+  })).toBeVisible();
   await expect(page.getByText("@doyoulike.classic").first()).toBeVisible();
   await expect(page.locator(".reel-card")).toHaveCount(4);
   await expect(page.locator(".reel-card").first()).toHaveAttribute("href", /instagram\.com\/reel/);

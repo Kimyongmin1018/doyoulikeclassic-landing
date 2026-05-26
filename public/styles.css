@@ -9,11 +9,12 @@
 :root {
   --color-storm-gray: #111118;
   --color-canvas-white: #ffffff;
+  --color-page-bg: #fbf9f6;
   --color-pale-mist: #f0f6ff;
-  --color-electric-blue: #2727e6;
+  --color-electric-blue: #111118;
   --color-vivid-green: #16ab59;
-  --color-lemon-zest: #ffda00;
-  --color-sky-tint: #e1edff;
+  --color-lemon-zest: #ffffff;
+  --color-sky-tint: #fbf9f6;
   --color-cool-aqua: #91d8ec;
   --color-coral-glow: #ffbac4;
   --color-sunset-orange: #ff7715;
@@ -38,7 +39,7 @@ html {
 body {
   margin: 0;
   color: var(--color-storm-gray);
-  background: var(--color-canvas-white);
+  background: var(--color-page-bg);
   font-family: var(--font-haas-grot-text);
   font-size: 16px;
   line-height: 1.35;
@@ -54,7 +55,7 @@ body::before {
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(circle at 9% 18%, rgba(255, 218, 0, 0.9) 0 42px, transparent 43px),
+    radial-gradient(circle at 9% 18%, rgba(255, 255, 255, 0.95) 0 42px, transparent 43px),
     radial-gradient(circle at 92% 8%, rgba(145, 216, 236, 0.75) 0 72px, transparent 73px),
     linear-gradient(90deg, rgba(39, 39, 230, 0.06) 1px, transparent 1px),
     linear-gradient(0deg, rgba(39, 39, 230, 0.04) 1px, transparent 1px);
@@ -108,8 +109,9 @@ h1 {
 
 h2 {
   max-width: 780px;
-  font-size: 52px;
-  line-height: 1;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.08;
 }
 
 h3 {
@@ -127,7 +129,7 @@ h3 {
   gap: 24px;
   min-height: 72px;
   padding: 14px 32px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(251, 249, 246, 0.92);
   border-bottom: 1px solid rgba(17, 17, 24, 0.1);
   backdrop-filter: blur(14px);
 }
@@ -137,6 +139,7 @@ h3 {
   align-items: center;
   gap: 10px;
   font-size: 24px;
+  font-weight: 700;
   line-height: 1.1;
 }
 
@@ -235,9 +238,9 @@ h3 {
   min-height: 48px;
   padding: 12px 22px;
   background: var(--color-lemon-zest);
-  border: 1px solid var(--color-storm-gray);
+  border: 0;
   font-family: var(--font-haas-grot-disp);
-  font-weight: 700;
+  font-weight: 400;
   font-size: 20px;
   line-height: 1.1;
   letter-spacing: 0;
@@ -249,6 +252,15 @@ h3 {
   max-width: 700px;
   font-size: 20px;
   line-height: 1.4;
+}
+
+.hero-subtitle {
+  white-space: pre-line;
+}
+
+#hero-title {
+  font-size: 64px;
+  font-weight: 800;
 }
 
 .badge-row,
@@ -371,16 +383,19 @@ h3 {
   background: var(--color-coral-glow);
 }
 
-.event-band,
 .process-band,
 .site-footer {
   background: var(--color-sky-tint);
 }
 
+.event-band {
+  background: #d3cac3;
+}
+
 .application-status-section {
   overflow: hidden;
   background:
-    radial-gradient(circle at 6% 18%, rgba(255, 218, 0, 0.92) 0 58px, transparent 59px),
+    radial-gradient(circle at 6% 18%, rgba(255, 255, 255, 0.95) 0 58px, transparent 59px),
     radial-gradient(circle at 94% 78%, rgba(145, 216, 236, 0.82) 0 92px, transparent 93px),
     linear-gradient(135deg, rgba(255, 186, 196, 0.96), rgba(255, 186, 196, 0.56));
 }
@@ -684,7 +699,7 @@ dd {
   overflow: hidden;
   color: var(--color-storm-gray);
   background:
-    radial-gradient(circle at 8% 12%, rgba(255, 218, 0, 0.88) 0 72px, transparent 73px),
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.95) 0 72px, transparent 73px),
     radial-gradient(circle at 96% 18%, rgba(255, 186, 196, 0.82) 0 96px, transparent 97px),
     var(--color-sky-tint);
 }
@@ -952,7 +967,7 @@ dd {
 }
 
 .chatbot-section {
-  background: var(--color-canvas-white);
+  background: var(--color-page-bg);
 }
 
 .chatbot-panel-inline {
@@ -1262,7 +1277,11 @@ dd {
   }
 
   h2 {
-    font-size: 42px;
+    font-size: 38px;
+  }
+
+  #hero-title {
+    font-size: 50px;
   }
 
   .site-header {
@@ -1369,7 +1388,11 @@ dd {
   }
 
   h2 {
-    font-size: 35px;
+    font-size: 31px;
+  }
+
+  #hero-title {
+    font-size: 38px;
   }
 
   .section {

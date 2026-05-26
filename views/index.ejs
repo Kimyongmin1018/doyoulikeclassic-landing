@@ -4,7 +4,7 @@
   const ctaLabel = featuredEvent?.cta.label || "신청 오픈 예정";
   const canApply = Boolean(ctaHref);
   const applicationStatus = model.content.applicationStatus;
-  const headerTitle = model.content.hero.headerTitle || "클래식을 좋아하세요?";
+  const headerTitle = model.content.hero.headerTitle || "클래식을 좋아하세요..?";
   const nextCtaLabel = model.content.hero.nextCtaLabel || "다음기수 신청하기";
   const participants = model.content.participants;
   const participantsSummary = participants.length
@@ -12,14 +12,10 @@
     : "다양한 사람들이 공연과 음악 이야기를 매개로 만났습니다.";
   const footerTitle = model.content.legal.footerTitle || "클래식을 좋아하세요..?";
   const footerDescription = model.content.legal.footerDescription || "서울 강남권에서 열리는 국내 최초 클래식 취향 기반 로테이션 소개팅";
-  const chatbotQuickReplies = ["신청 방법", "일정", "장소", "참가비", "지원현황", "개인정보"];
+  const chatbotQuickReplies = ["신청 방법", "일정", "장소", "참가비", "개인정보"];
   const chatbotData = {
     applyUrl: ctaHref,
     applyLabel: ctaLabel,
-    applicationStatusUrl: applicationStatus.url || "",
-    applicationStatusUpdatedLabel: applicationStatus.updatedLabel || "",
-    applicationStatusMaleSummary: applicationStatus.maleSummary || "",
-    applicationStatusFemaleSummary: applicationStatus.femaleSummary || "",
     instagramUrl: model.content.instagram.url || "",
     faq: model.content.faq || [],
     event: featuredEvent
@@ -111,7 +107,6 @@
         <div class="event-summary reveal">
           <p class="eyebrow">Current Event</p>
           <h2 id="event-title"><%= featuredEvent.generationLabel %></h2>
-          <p class="section-copy">6월 20일, 참여 확정자에 한해 장소와 결제 안내를 별도로 안내드립니다.</p>
           <dl class="event-facts">
             <div><dt>날짜</dt><dd><%= featuredEvent.eventDate %></dd></div>
             <div><dt>장소</dt><dd><%= featuredEvent.venueNote %></dd></div>
@@ -147,7 +142,7 @@
                 </div>
               <% }) %>
             </div>
-            <p class="notice">참여 확정 후 운영자가 결제 안내를 별도로 드립니다.</p>
+            <p class="notice">참여 확정되신 분들께 별도로 결제 안내드립니다.</p>
           </section>
         </div>
       </div>
@@ -158,7 +153,7 @@
     <div class="section-inner application-status-grid">
       <div class="application-status-copy reveal">
         <p class="eyebrow">Live Status</p>
-        <h2 id="application-status-title">지원현황을 확인하고 신청 타이밍을 잡아보세요.</h2>
+        <h2 id="application-status-title">이전 기수 참가자 데이터</h2>
         <p class="section-copy">성별과 연령대 흐름은 로테이션 소개팅에서 가장 중요한 정보입니다. 최신 현황은 노션 페이지에서 운영자가 수시로 업데이트합니다.</p>
         <div class="hero-actions">
           <% if (applicationStatus.url) { %>
@@ -215,7 +210,7 @@
       </div>
       <div class="reveal">
         <p class="eyebrow">Why Classic</p>
-        <h2 id="why-title">처음 만나는 대화에도 이미 공통의 주제가 있습니다.</h2>
+        <h2 id="why-title">첫 만남의 어색함,<br>클래식이 해결해줄 거예요.</h2>
         <div class="reason-list">
           <article>
             <span>01</span>
@@ -256,7 +251,7 @@
     <div class="section-inner participants-grid">
       <div class="reveal">
         <p class="eyebrow">Participants</p>
-        <h2 id="participants-title">각자의 일상은 다르지만, 음악을 사랑하는 마음은 같습니다.</h2>
+        <h2 id="participants-title">각자의 일상은 다르지만,<br>음악을 사랑하는 마음은 같습니다.</h2>
         <p class="section-copy"><%= participantsSummary %></p>
       </div>
       <div class="participant-cloud reveal" aria-label="참여자 예시">
@@ -275,8 +270,7 @@
         </div>
         <div class="instagram-profile-copy">
           <p class="eyebrow instagram-eyebrow">Instagram</p>
-          <h2 id="instagram-title">Instagram에서 먼저 만나는 클래식 살롱</h2>
-          <p>실제 모임 전후의 분위기, 클래식 취향 대화, 다음 모집 소식을 릴스처럼 빠르게 확인할 수 있습니다.</p>
+          <h2 id="instagram-title">인스타그램에서<br>현장 분위기, 다음 기수 모집 소식을<br>빠르게 확인해보세요.</h2>
           <div class="instagram-meta" aria-label="인스타그램 계정 정보">
             <span><strong><%= model.content.instagram.reels.length %></strong><small>Reels</small></span>
             <span><strong>Seoul</strong><small>Gangnam</small></span>
@@ -317,7 +311,7 @@
     <div class="section-inner faq-grid">
       <div class="reveal">
         <p class="eyebrow">FAQ</p>
-        <h2 id="faq-title">처음 신청하는 분들이 자주 묻는 질문</h2>
+        <h2 id="faq-title">자주 묻는 질문</h2>
         <p class="notice">개인정보는 구글폼에서 수집되며, 이 사이트 데이터베이스에는 신청자 개인정보를 저장하지 않습니다.</p>
       </div>
       <div class="faq-list">
@@ -336,7 +330,7 @@
       <div>
         <p class="eyebrow">Q&amp;A</p>
         <h2 id="contact-title">궁금한 점은 챗봇에게 바로 물어보세요.</h2>
-        <p class="section-copy">신청 방법, 일정, 장소, 참가비, 지원현황은 현재 홈페이지 정보와 FAQ를 기준으로 자동 안내합니다.</p>
+        <p class="section-copy">신청 방법, 일정, 장소, 참가비는 현재 홈페이지 정보와 FAQ를 기준으로 자동 안내합니다.</p>
       </div>
       <div class="chatbot-inline-action">
         <button class="button button-primary" type="button" data-chatbot-open>Q&amp;A 챗봇 열기</button>

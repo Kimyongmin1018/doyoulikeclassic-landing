@@ -58,7 +58,7 @@ if (chatbotDataElement && chatbotWidget) {
     if (!hasWelcomed) {
       appendMessage(
         "bot",
-        "안녕하세요. 신청 방법, 일정, 장소, 참가비, 지원현황을 물어보면 바로 안내해드릴게요."
+        "안녕하세요. 신청 방법, 일정, 장소, 참가비를 물어보면 바로 안내해드릴게요."
       );
       hasWelcomed = true;
     }
@@ -193,17 +193,8 @@ if (chatbotDataElement && chatbotWidget) {
     if (includesAny(normalized, ["참가비", "가격", "비용", "결제", "입금", "환불"])) {
       return {
         text: event.priceRows
-          ? `참가비는 ${formatList(event.priceRows, "확정자에게 개별 안내")}입니다. 결제 안내는 참여 확정 후 운영자가 별도로 전달합니다.`
-          : "참가비와 결제 안내는 참여 확정 후 운영자가 별도로 전달합니다."
-      };
-    }
-
-    if (includesAny(normalized, ["지원현황", "현황", "성비", "남자", "여자", "연령", "나이"])) {
-      return {
-        text: `지원현황은 ${chatbotData.applicationStatusUpdatedLabel || "최신 기준"}입니다. 현재 요약은 남자 ${chatbotData.applicationStatusMaleSummary || "업데이트 예정"}, 여자 ${chatbotData.applicationStatusFemaleSummary || "업데이트 예정"}입니다.`,
-        actions: chatbotData.applicationStatusUrl
-          ? [{ label: "지원현황 보기", href: chatbotData.applicationStatusUrl }]
-          : []
+          ? `참가비는 ${formatList(event.priceRows, "확정자에게 개별 안내")}입니다. 참여 확정되신 분들께 별도로 결제 안내드립니다.`
+          : "참가비와 결제 안내는 참여 확정되신 분들께 별도로 안내드립니다."
       };
     }
 
@@ -220,7 +211,7 @@ if (chatbotDataElement && chatbotWidget) {
     }
 
     return {
-      text: "지금은 FAQ와 현재 행사 정보를 기준으로 답변하고 있습니다. 신청 방법, 일정, 장소, 참가비, 지원현황처럼 물어봐 주세요."
+      text: "지금은 FAQ와 현재 행사 정보를 기준으로 답변하고 있습니다. 신청 방법, 일정, 장소, 참가비처럼 물어봐 주세요."
     };
   }
 

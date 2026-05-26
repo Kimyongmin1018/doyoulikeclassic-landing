@@ -31,7 +31,7 @@ function eventPayload(overrides = {}) {
 
 function contentPayload(overrides = {}) {
   return {
-    headerTitle: "클래식을 좋아하세요?",
+    headerTitle: "클래식을 좋아하세요..?",
     heroEyebrow: "취향이 만나는 테스트 살롱",
     heroHeadline: "클래식으로 시작하는 새로운 인연",
     heroSubheadline: "서울 강남권에서 만나는 취향 기반 로테이션 소개팅",
