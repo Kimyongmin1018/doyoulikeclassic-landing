@@ -65,9 +65,9 @@
     <a href="#chatbot" data-chatbot-open>문의</a>
   </nav>
   <% if (canApply) { %>
-    <a class="button button-primary" href="<%= ctaHref %>" target="_blank" rel="noreferrer"><%= ctaLabel %></a>
+    <a class="button button-primary button-card-radius" href="<%= ctaHref %>" target="_blank" rel="noreferrer"><%= ctaLabel %></a>
   <% } else { %>
-    <span class="button button-disabled" aria-disabled="true"><%= ctaLabel %></span>
+    <span class="button button-disabled button-card-radius" aria-disabled="true"><%= ctaLabel %></span>
   <% } %>
 </header>
 
@@ -87,9 +87,9 @@
         </div>
         <div class="hero-actions">
           <% if (canApply) { %>
-            <a class="button button-large" href="<%= ctaHref %>" target="_blank" rel="noreferrer"><%= ctaLabel %></a>
+            <a class="button button-large button-card-radius" href="<%= ctaHref %>" target="_blank" rel="noreferrer"><%= ctaLabel %></a>
           <% } else { %>
-            <span class="button button-disabled button-large" aria-disabled="true"><%= ctaLabel %></span>
+            <span class="button button-disabled button-large button-card-radius" aria-disabled="true"><%= ctaLabel %></span>
           <% } %>
           <a class="text-link" href="#process">진행 방식 보기</a>
         </div>
@@ -105,7 +105,7 @@
     <section id="event" class="section event-band" aria-labelledby="event-title">
       <div class="section-inner event-grid">
         <div class="event-summary reveal">
-          <p class="eyebrow">Current Event</p>
+          <p class="eyebrow section-eyebrow">Current Event</p>
           <h2 id="event-title"><%= featuredEvent.generationLabel %></h2>
           <dl class="event-facts">
             <div><dt>날짜</dt><dd><%= featuredEvent.eventDate %></dd></div>
@@ -115,9 +115,9 @@
           </dl>
           <div class="hero-actions">
             <% if (canApply) { %>
-              <a class="button button-primary" href="<%= ctaHref %>" target="_blank" rel="noreferrer"><%= ctaLabel %></a>
+              <a class="button button-primary button-card-radius" href="<%= ctaHref %>" target="_blank" rel="noreferrer"><%= ctaLabel %></a>
             <% } else { %>
-              <span class="button button-disabled" aria-disabled="true"><%= ctaLabel %></span>
+              <span class="button button-disabled button-card-radius" aria-disabled="true"><%= ctaLabel %></span>
             <% } %>
             <span class="button button-white event-next-button" aria-disabled="true"><%= nextCtaLabel %></span>
           </div>
@@ -152,14 +152,14 @@
   <section id="application-status" class="section application-status-section" aria-labelledby="application-status-title">
     <div class="section-inner application-status-grid">
       <div class="application-status-copy reveal">
-        <p class="eyebrow">Live Status</p>
+        <p class="eyebrow section-eyebrow">Live Status</p>
         <h2 id="application-status-title">이전 기수 참가자 데이터</h2>
         <p class="section-copy">성별과 연령대 흐름은 로테이션 소개팅에서 가장 중요한 정보입니다. 최신 현황은 노션 페이지에서 운영자가 수시로 업데이트합니다.</p>
         <div class="hero-actions">
           <% if (applicationStatus.url) { %>
-            <a class="button button-primary" href="<%= applicationStatus.url %>" target="_blank" rel="noreferrer">지원현황 노션에서 보기</a>
+            <a class="button button-primary button-card-radius" href="<%= applicationStatus.url %>" target="_blank" rel="noreferrer">지원현황 노션에서 보기</a>
           <% } else { %>
-            <span class="button button-disabled" aria-disabled="true">지원현황 준비 중</span>
+            <span class="button button-disabled button-card-radius" aria-disabled="true">지원현황 준비 중</span>
           <% } %>
           <a class="text-link" href="#event">모집 일정 보기</a>
         </div>
@@ -209,7 +209,7 @@
         <img src="/assets/images/classic-detail.jpg" alt="악보와 현악기 디테일">
       </div>
       <div class="reveal">
-        <p class="eyebrow">Why Classic</p>
+        <p class="eyebrow section-eyebrow">Why Classic</p>
         <h2 id="why-title">첫 만남의 어색함,<br>클래식이 해결해줄 거예요.</h2>
         <div class="reason-list">
           <article>
@@ -234,7 +234,7 @@
 
   <section id="process" class="section process-band" aria-labelledby="process-title">
     <div class="section-inner">
-      <p class="eyebrow">Process</p>
+      <p class="eyebrow section-eyebrow">Process</p>
       <h2 id="process-title">신청부터 만남까지, 이렇게 진행됩니다.</h2>
       <ol class="process-list">
         <li><strong>구글폼 신청</strong><p>가능한 시간대를 모두 선택해 제출합니다.</p></li>
@@ -250,7 +250,7 @@
   <section class="section participants-section" aria-labelledby="participants-title">
     <div class="section-inner participants-grid">
       <div class="reveal">
-        <p class="eyebrow">Participants</p>
+        <p class="eyebrow section-eyebrow">Participants</p>
         <h2 id="participants-title">각자의 일상은 다르지만,<br>음악을 사랑하는 마음은 같습니다.</h2>
         <p class="section-copy"><%= participantsSummary %></p>
       </div>
@@ -269,7 +269,7 @@
           <img src="/assets/images/doyoulikeclassic-logo.jpg" alt="">
         </div>
         <div class="instagram-profile-copy">
-          <p class="eyebrow instagram-eyebrow">Instagram</p>
+          <p class="eyebrow section-eyebrow instagram-eyebrow">Instagram</p>
           <h2 id="instagram-title">인스타그램에서<br>현장 분위기, 다음 기수 모집 소식을<br>빠르게 확인해보세요.</h2>
           <div class="instagram-meta" aria-label="인스타그램 계정 정보">
             <span><strong><%= model.content.instagram.reels.length %></strong><small>Reels</small></span>
@@ -280,7 +280,7 @@
         <div class="instagram-profile-action">
           <strong><%= model.content.instagram.handle %></strong>
           <% if (model.content.instagram.url) { %>
-            <a class="button button-white" href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer">Instagram에서 보기</a>
+            <a class="button button-white button-card-radius" href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer">Instagram에서 보기</a>
           <% } %>
         </div>
       </div>
@@ -310,7 +310,7 @@
   <section id="faq" class="section faq-section" aria-labelledby="faq-title">
     <div class="section-inner faq-grid">
       <div class="reveal">
-        <p class="eyebrow">FAQ</p>
+        <p class="eyebrow section-eyebrow">FAQ</p>
         <h2 id="faq-title">자주 묻는 질문</h2>
         <p class="notice">개인정보는 구글폼에서 수집되며, 이 사이트 데이터베이스에는 신청자 개인정보를 저장하지 않습니다.</p>
       </div>
@@ -393,8 +393,8 @@
 
 <div class="mobile-cta" aria-label="모바일 신청 버튼">
   <% if (canApply) { %>
-    <a class="button button-large" href="<%= ctaHref %>" target="_blank" rel="noreferrer"><%= ctaLabel %></a>
+    <a class="button button-large button-card-radius" href="<%= ctaHref %>" target="_blank" rel="noreferrer"><%= ctaLabel %></a>
   <% } else { %>
-    <span class="button button-disabled button-large" aria-disabled="true"><%= ctaLabel %></span>
+    <span class="button button-disabled button-large button-card-radius" aria-disabled="true"><%= ctaLabel %></span>
   <% } %>
 </div>
