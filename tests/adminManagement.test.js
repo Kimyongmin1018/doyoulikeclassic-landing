@@ -405,7 +405,7 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("궁금한 점은 챗봇에게 바로 물어보세요.");
     expect(publicPage.text).toContain("FAQ와 현재 행사 정보 기준");
     expect(publicPage.text).toContain("demo.doyoulikeclassic.com");
-    expect(publicPage.text).toContain("홍길동");
+    expect(publicPage.text).not.toContain("홍길동");
     expect(publicPage.text).not.toContain("테스트 클래식 살롱");
     expect(publicPage.text).not.toContain("123-45-67890");
   });

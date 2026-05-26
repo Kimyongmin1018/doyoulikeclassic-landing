@@ -992,6 +992,21 @@ dd {
   align-items: start;
 }
 
+.footer-brand {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.footer-logo {
+  width: 64px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(17, 17, 24, 0.16);
+}
+
 .site-footer strong {
   display: block;
   margin-bottom: 8px;
