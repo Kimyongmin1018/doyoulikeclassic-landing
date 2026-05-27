@@ -29,6 +29,157 @@ document.querySelectorAll('a[href^="#"]').forEach((link) => {
   });
 });
 
+const snapSections = Array.from(
+  document.querySelectorAll("main > .section:not(.chatbot-section)")
+);
+const snapReleaseSection = document.querySelector(".faq-section");
+const snapMedia = window.matchMedia(
+  "(min-width: 981px) and (min-height: 680px) and (prefers-reduced-motion: no-preference)"
+);
+let isSnapScrolling = false;
+let snapUnlockTimer;
+let snapReleaseTicking = false;
+
+function getSnapHeaderOffset() {
+  const header = document.querySelector(".site-header");
+  return header instanceof HTMLElement ? header.offsetHeight : 72;
+}
+
+function findScrollableParent(element) {
+  let node = element;
+
+  while (node && node !== document.body && node !== document.documentElement) {
+    if (node instanceof HTMLElement) {
+      const style = window.getComputedStyle(node);
+      const canScrollY = /(auto|scroll)/.test(style.overflowY);
+
+      if (canScrollY && node.scrollHeight > node.clientHeight + 1) {
+        return node;
+      }
+    }
+
+    node = node.parentElement;
+  }
+
+  return null;
+}
+
+function canScrollInside(element, deltaY) {
+  if (!element) return false;
+
+  if (deltaY > 0) {
+    return element.scrollTop + element.clientHeight < element.scrollHeight - 1;
+  }
+
+  return element.scrollTop > 1;
+}
+
+function getCurrentSnapIndex() {
+  const headerOffset = getSnapHeaderOffset();
+  const viewportAnchor = headerOffset + (window.innerHeight - headerOffset) / 2;
+  let currentIndex = 0;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+
+  snapSections.forEach((section, index) => {
+    const rect = section.getBoundingClientRect();
+
+    if (rect.top <= viewportAnchor && rect.bottom >= viewportAnchor) {
+      currentIndex = index;
+      nearestDistance = 0;
+      return;
+    }
+
+    const distance = Math.abs(rect.top - headerOffset);
+    if (distance < nearestDistance) {
+      currentIndex = index;
+      nearestDistance = distance;
+    }
+  });
+
+  return currentIndex;
+}
+
+function scrollToSnapSection(index) {
+  const section = snapSections[index];
+  if (!section) return;
+
+  const top = window.scrollY + section.getBoundingClientRect().top - getSnapHeaderOffset();
+  window.scrollTo({ top, behavior: "smooth" });
+}
+
+function shouldReleaseSnap() {
+  if (!snapMedia.matches || !(snapReleaseSection instanceof HTMLElement)) return false;
+
+  const releaseTop = window.scrollY + snapReleaseSection.getBoundingClientRect().top - getSnapHeaderOffset();
+  return window.scrollY >= releaseTop - 2;
+}
+
+function updateSnapRelease() {
+  document.documentElement.classList.toggle("snap-scroll-released", shouldReleaseSnap());
+}
+
+function scheduleSnapReleaseUpdate() {
+  if (snapReleaseTicking) return;
+
+  snapReleaseTicking = true;
+  window.requestAnimationFrame(() => {
+    updateSnapRelease();
+    snapReleaseTicking = false;
+  });
+}
+
+window.addEventListener(
+  "wheel",
+  (event) => {
+    if (!snapMedia.matches || snapSections.length < 2) return;
+    if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+    if (!(event.target instanceof Element)) return;
+    if (event.target.closest(".chatbot-widget")) return;
+    if (event.target.closest(".chatbot-section, .site-footer")) return;
+
+    const scrollableParent = findScrollableParent(event.target);
+    if (canScrollInside(scrollableParent, event.deltaY)) return;
+
+    const direction = Math.sign(event.deltaY);
+    if (!direction) return;
+
+    if (isSnapScrolling) {
+      event.preventDefault();
+      return;
+    }
+
+    const currentIndex = getCurrentSnapIndex();
+    const nextIndex = Math.max(0, Math.min(snapSections.length - 1, currentIndex + direction));
+    if (nextIndex === currentIndex) {
+      if (direction > 0 && currentIndex === snapSections.length - 1) {
+        document.documentElement.classList.add("snap-scroll-released");
+      }
+
+      return;
+    }
+
+    event.preventDefault();
+
+    isSnapScrolling = true;
+    scrollToSnapSection(nextIndex);
+
+    window.clearTimeout(snapUnlockTimer);
+    snapUnlockTimer = window.setTimeout(() => {
+      isSnapScrolling = false;
+      updateSnapRelease();
+    }, 850);
+  },
+  { passive: false }
+);
+
+window.addEventListener("scroll", scheduleSnapReleaseUpdate, { passive: true });
+
+window.addEventListener("resize", () => {
+  isSnapScrolling = false;
+  window.clearTimeout(snapUnlockTimer);
+  updateSnapRelease();
+});
+
 const chatbotDataElement = document.getElementById("chatbot-data");
 const chatbotWidget = document.querySelector("[data-chatbot-widget]");
 

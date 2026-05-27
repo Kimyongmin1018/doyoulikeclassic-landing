@@ -9,12 +9,13 @@
 :root {
   --color-storm-gray: #111118;
   --color-canvas-white: #ffffff;
-  --color-page-bg: #fbf9f6;
+  --color-page-bg: #e9e3d8;
+  --color-card-bg: #fbf9f6;
   --color-pale-mist: #f0f6ff;
   --color-electric-blue: #111118;
   --color-vivid-green: #16ab59;
   --color-lemon-zest: #ffffff;
-  --color-sky-tint: #fbf9f6;
+  --color-sky-tint: #e9e3d8;
   --color-cool-aqua: #91d8ec;
   --color-coral-glow: #ffbac4;
   --color-sunset-orange: #ff7715;
@@ -26,6 +27,7 @@
   --radius-buttons: 32px;
   --radius-pill: 48px;
   --radius-input: 5000px;
+  --snap-header-offset: 72px;
 }
 
 * {
@@ -34,6 +36,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: var(--snap-header-offset);
 }
 
 body {
@@ -54,16 +57,7 @@ body::before {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 9% 18%, rgba(255, 255, 255, 0.95) 0 42px, transparent 43px),
-    linear-gradient(90deg, rgba(39, 39, 230, 0.06) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(39, 39, 230, 0.04) 1px, transparent 1px);
-  background-position:
-    9% 18%,
-    0 0,
-    0 0;
-  background-repeat: no-repeat, repeat, repeat;
-  background-size: auto, 96px 96px, 96px 96px;
+  background: transparent;
 }
 
 img {
@@ -127,7 +121,7 @@ h3 {
   gap: 24px;
   min-height: 72px;
   padding: 14px 32px;
-  background: rgba(251, 249, 246, 0.92);
+  background: rgba(233, 227, 216, 0.92);
   border-bottom: 1px solid rgba(17, 17, 24, 0.1);
   backdrop-filter: blur(14px);
 }
@@ -193,12 +187,22 @@ h3 {
   margin: 0 auto;
 }
 
+main > .section:not(.chatbot-section) > .section-inner {
+  width: min(1280px, 100%);
+  padding: clamp(24px, 3.4vw, 48px);
+  border: 1px solid rgba(17, 17, 24, 0.08);
+  border-radius: 28px;
+  background: var(--color-card-bg);
+  box-shadow: 0 22px 56px rgba(17, 17, 24, 0.08);
+}
+
 .hero {
   min-height: calc(100vh - 72px);
   display: grid;
   align-items: center;
   padding-top: 48px;
   overflow: hidden;
+  background: var(--color-page-bg);
 }
 
 .hero-grid,
@@ -1251,9 +1255,35 @@ dd {
   transform: translateY(0);
 }
 
+@media (min-width: 981px) and (min-height: 680px) and (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-snap-type: y mandatory;
+  }
+
+  html.snap-scroll-released {
+    scroll-snap-type: none;
+  }
+
+  main > .section:not(.chatbot-section) {
+    min-height: calc(100svh - var(--snap-header-offset));
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  main > .section:not(.chatbot-section) {
+    display: grid;
+    align-items: center;
+  }
+
+  .hero {
+    min-height: calc(100svh - var(--snap-header-offset));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+    scroll-snap-type: none;
   }
 
   *,
@@ -1391,6 +1421,11 @@ dd {
 
   .section {
     padding: 48px 18px;
+  }
+
+  main > .section:not(.chatbot-section) > .section-inner {
+    padding: 22px;
+    border-radius: 20px;
   }
 
   .site-header {
