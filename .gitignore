@@ -7,5 +7,7 @@ logs/
 coverage/
 playwright-report/
 test-results/
+tmp/
+/로소) 세로 사이트*.jpg
 .DS_Store
 .superpowers/

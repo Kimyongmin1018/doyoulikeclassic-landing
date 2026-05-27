@@ -42,7 +42,20 @@ html {
 body {
   margin: 0;
   color: var(--color-storm-gray);
-  background: var(--color-page-bg);
+  background-color: var(--color-page-bg);
+  background-image: url("/assets/images/roso-vertical-site-extended.jpg");
+  background-image: -webkit-image-set(
+    url("/assets/images/roso-vertical-site-extended.jpg") 1x,
+    url("/assets/images/roso-vertical-site-extended@2x.jpg") 2x
+  );
+  background-image: image-set(
+    url("/assets/images/roso-vertical-site-extended.jpg") 1x,
+    url("/assets/images/roso-vertical-site-extended@2x.jpg") 2x
+  );
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 2198px auto;
+  background-attachment: scroll;
   font-family: var(--font-haas-grot-text);
   font-size: 16px;
   line-height: 1.35;
@@ -202,7 +215,7 @@ main > .section:not(.chatbot-section) > .section-inner {
   align-items: center;
   padding-top: 48px;
   overflow: hidden;
-  background: var(--color-page-bg);
+  background: transparent;
 }
 
 .hero-grid,
@@ -396,20 +409,20 @@ main > .section:not(.chatbot-section) > .section-inner {
 
 .process-band,
 .site-footer {
-  background: var(--color-sky-tint);
+  background: transparent;
 }
 
 .event-band {
-  background: var(--color-page-bg);
+  background: transparent;
 }
 
 .application-status-section {
   overflow: hidden;
-  background: var(--color-page-bg);
+  background: transparent;
 }
 
 .participants-section {
-  background: var(--color-page-bg);
+  background: transparent;
 }
 
 .application-status-copy {
@@ -710,7 +723,7 @@ dd {
 .instagram-section {
   overflow: hidden;
   color: var(--color-storm-gray);
-  background: var(--color-sky-tint);
+  background: transparent;
 }
 
 .instagram-shell {
@@ -965,7 +978,7 @@ dd {
 }
 
 .chatbot-section {
-  background: var(--color-page-bg);
+  background: transparent;
 }
 
 .chatbot-panel-inline {
@@ -1395,6 +1408,7 @@ dd {
 
   body {
     padding-bottom: 76px;
+    background-attachment: scroll;
   }
 
   .chatbot-widget {
