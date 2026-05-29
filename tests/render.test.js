@@ -13,7 +13,7 @@ describe("rendering", () => {
     expect(response.text).toContain("서울 강남권");
     expect(response.text).toContain("누적 신청자 500명 이상");
     expect(response.text).toContain("이번 기수 신청하기");
-    expect(response.text).toContain("개인정보는 구글폼에서 수집");
+    expect(response.text).toContain("자주 묻는 질문");
     expect(response.text).toContain("Q&amp;A 챗봇");
     expect(response.text).toContain("궁금한 점은 챗봇에게 바로 물어보세요.");
   });

@@ -388,13 +388,10 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("서울 강남권에서 만나는 취향 기반 로테이션 소개팅");
     expect(publicPage.text).toContain("검증된 신청 폼");
     expect(publicPage.text).toContain("피아니스트");
-    expect(publicPage.text).toContain("https://doyoulikeclassic.notion.site/status");
-    expect(publicPage.text).toContain("서울 강남권 7기 | 테스트 기준");
-    expect(publicPage.text).toContain("남자 12명");
-    expect(publicPage.text).toContain("여자 14명");
-    expect(publicPage.text).toContain("94년생 3명");
-    expect(publicPage.text).toContain("00년생 7명");
-    expect(publicPage.text).toContain("노션에서 최신 현황을 확인합니다.");
+    expect(publicPage.text).toContain("/assets/images/participant-status-5th.jpg");
+    expect(publicPage.text).toContain("클래식을 좋아하세요 5기 참여자 현황");
+    expect(publicPage.text).not.toContain("지원현황 노션에서 보기");
+    expect(publicPage.text).not.toContain("성별과 연령대 흐름은 로테이션 소개팅에서 가장 중요한 정보입니다.");
     expect(publicPage.text).toContain("https://www.instagram.com/doyoulike.classic");
     expect(publicPage.text).toContain("@doyoulike.classic");
     expect(publicPage.text).toContain("https://www.instagram.com/reel/demo-one");
@@ -404,7 +401,7 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("Q&amp;A 챗봇");
     expect(publicPage.text).toContain("궁금한 점은 챗봇에게 바로 물어보세요.");
     expect(publicPage.text).toContain("FAQ와 현재 행사 정보 기준");
-    expect(publicPage.text).toContain("demo.doyoulikeclassic.com");
+    expect(publicPage.text).not.toContain("demo.doyoulikeclassic.com");
     expect(publicPage.text).not.toContain("홍길동");
     expect(publicPage.text).not.toContain("테스트 클래식 살롱");
     expect(publicPage.text).not.toContain("123-45-67890");

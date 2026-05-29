@@ -43,26 +43,26 @@ test("event, process, faq, and footer sections are reachable", async ({ page }) 
   await page.goto("/");
 
   await page.getByRole("link", { name: "일정", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "6기 모집" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "6기 일정" })).toBeVisible();
   await expect(page.getByText("16:00-18:00")).toBeVisible();
   await expect(page.getByText("35,000원").first()).toBeVisible();
 
-  await page.getByRole("link", { name: "지원현황", exact: true }).click();
+  await page.getByRole("link", { name: "이전 기수", exact: true }).click();
   await expect(page.getByRole("heading", { name: "이전 기수 참가자 데이터" })).toBeVisible();
-  await expect(page.getByText("남자 17명")).toBeVisible();
-  await expect(page.getByText("여자 20명")).toBeVisible();
+  await expect(page.locator("img[alt='클래식을 좋아하세요 1기 참여자 현황']")).toBeVisible();
 
-  await page.getByRole("link", { name: "진행 방식", exact: true }).click();
+  await page.getByRole("link", { name: "절차", exact: true }).click();
   await expect(page.getByRole("heading", { name: /신청부터 만남까지/ })).toBeVisible();
+  await expect(page.getByText("로테이션 소개팅")).toBeVisible();
   await expect(page.getByRole("heading", { name: "자주 묻는 질문" })).toBeVisible();
-  await expect(page.getByText("http://doyoulikeclassic.com/")).toBeVisible();
+  await expect(page.getByText("http://doyoulikeclassic.com/")).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 });
 
 test("instagram section presents reel previews", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByRole("link", { name: "Instagram", exact: true }).click();
+  await page.getByRole("link", { name: "현장 영상", exact: true }).click();
   await expect(page.getByRole("heading", {
     name: /인스타그램에서\s*현장 분위기, 다음 기수 모집 소식을\s*빠르게 확인해보세요\./
   })).toBeVisible();

@@ -180,6 +180,52 @@ window.addEventListener("resize", () => {
   updateSnapRelease();
 });
 
+document.querySelectorAll("[data-status-carousel]").forEach((carousel) => {
+  const track = carousel.querySelector("[data-status-carousel-track]");
+  const previousButton = carousel.querySelector("[data-status-carousel-prev]");
+  const nextButton = carousel.querySelector("[data-status-carousel-next]");
+
+  if (!(track instanceof HTMLElement)) return;
+
+  function getScrollStep() {
+    const firstCard = track.querySelector(".status-board-image-card");
+    if (!(firstCard instanceof HTMLElement)) {
+      return track.clientWidth;
+    }
+
+    const styles = window.getComputedStyle(track);
+    const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
+    const cardWidth = firstCard.getBoundingClientRect().width;
+    const visibleItems = Math.max(1, Math.round((track.clientWidth + gap) / (cardWidth + gap)));
+
+    return (cardWidth + gap) * visibleItems;
+  }
+
+  function updateCarouselButtons() {
+    const maxScrollLeft = track.scrollWidth - track.clientWidth;
+
+    if (previousButton instanceof HTMLButtonElement) {
+      previousButton.disabled = track.scrollLeft <= 1;
+    }
+
+    if (nextButton instanceof HTMLButtonElement) {
+      nextButton.disabled = track.scrollLeft >= maxScrollLeft - 1;
+    }
+  }
+
+  previousButton?.addEventListener("click", () => {
+    track.scrollBy({ left: -getScrollStep(), behavior: "smooth" });
+  });
+
+  nextButton?.addEventListener("click", () => {
+    track.scrollBy({ left: getScrollStep(), behavior: "smooth" });
+  });
+
+  track.addEventListener("scroll", updateCarouselButtons, { passive: true });
+  window.addEventListener("resize", updateCarouselButtons);
+  updateCarouselButtons();
+});
+
 const chatbotDataElement = document.getElementById("chatbot-data");
 const chatbotWidget = document.querySelector("[data-chatbot-widget]");
 

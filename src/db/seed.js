@@ -33,7 +33,8 @@ const contentBlocks = {
     "금융권 종사자",
     "엔지니어",
     "디자이너",
-    "기획자"
+    "기획자",
+    "공무원"
   ],
   applicationStatus: {
     url: "https://doyoulikeclassic.notion.site/27281544f0928301a650015e4373f855",
@@ -171,7 +172,7 @@ export function seedDatabase(db) {
       EVENT_ID,
       "notion-seed-6",
       "클래식을 좋아하세요 6기",
-      "6기 모집",
+      "6기 일정",
       "6/13 토요일",
       "서울 강남권",
       "논현역 인근, 참여 확정자에게 개별 안내",
