@@ -86,6 +86,7 @@
   </div>
 </header>
 
+<div class="site-scale">
 <main id="top">
   <section class="hero section" aria-labelledby="hero-title">
     <div class="shape shape-lemon" aria-hidden="true"></div>
@@ -165,7 +166,7 @@
   <section id="application-status" class="section application-status-section" aria-labelledby="application-status-title">
     <div class="section-inner application-status-layout">
       <div class="section-heading application-status-heading reveal">
-        <p class="eyebrow section-eyebrow">Live Status</p>
+        <p class="eyebrow section-eyebrow">Attendee Stats</p>
         <h2 id="application-status-title">이전 기수 참가자 데이터</h2>
       </div>
       <div class="status-carousel reveal" aria-label="이전 기수 참가자 데이터 이미지" data-status-carousel>
@@ -190,7 +191,7 @@
       </div>
       <div class="reveal">
         <div class="section-heading">
-          <p class="eyebrow section-eyebrow">Why Classic</p>
+          <p class="eyebrow section-eyebrow">About</p>
           <h2 id="why-title">첫 만남의 어색함,<br>클래식이 해결해줄 거예요.</h2>
         </div>
         <div class="reason-list">
@@ -230,7 +231,7 @@
     <div class="section-inner participants-layout">
       <div class="reveal">
         <div class="section-heading">
-          <p class="eyebrow section-eyebrow">Participants</p>
+          <p class="eyebrow section-eyebrow">Classic</p>
           <h2 id="participants-title">각자의 일상은 다르지만,<br>음악을 사랑하는 마음은 같습니다.</h2>
         </div>
         <p class="section-copy">
@@ -261,32 +262,34 @@
             <h2 id="instagram-title"><span class="instagram-title-line">인스타그램에서 현장 분위기, 다음 기수 모집 소식을</span><br>빠르게 확인해보세요.</h2>
           </div>
         </div>
-        <div class="instagram-profile-action">
+      </div>
+
+      <div class="instagram-feed-row">
+        <div class="reel-grid instagram-feed" aria-label="Instagram Reels 미리보기">
+          <% model.content.instagram.reels.forEach((url, index) => { %>
+            <a class="reel-card reveal" href="<%= url %>" target="_blank" rel="noreferrer" aria-label="Instagram Reel <%= String(index + 1).padStart(2, "0") %> 새 창으로 보기">
+              <img src="<%= reelPreviewImages[index % reelPreviewImages.length] %>" alt="<%= reelPreviewCaptions[index % reelPreviewCaptions.length] %>" loading="lazy">
+              <span class="reel-shade" aria-hidden="true"></span>
+              <span class="reel-badge">REELS</span>
+              <span class="reel-play" aria-hidden="true"></span>
+              <span class="reel-copy">
+                <small><%= model.content.instagram.handle %></small>
+                <strong><%= reelPreviewCaptions[index % reelPreviewCaptions.length] %></strong>
+              </span>
+              <span class="reel-actions" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
+            </a>
+          <% }) %>
+        </div>
+        <div class="instagram-profile-action reveal">
           <strong><%= model.content.instagram.handle %></strong>
           <% if (model.content.instagram.url) { %>
             <a class="button button-white button-card-radius" href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer">Instagram에서 보기</a>
           <% } %>
         </div>
-      </div>
-
-      <div class="reel-grid instagram-feed" aria-label="Instagram Reels 미리보기">
-        <% model.content.instagram.reels.forEach((url, index) => { %>
-          <a class="reel-card reveal" href="<%= url %>" target="_blank" rel="noreferrer" aria-label="Instagram Reel <%= String(index + 1).padStart(2, "0") %> 새 창으로 보기">
-            <img src="<%= reelPreviewImages[index % reelPreviewImages.length] %>" alt="<%= reelPreviewCaptions[index % reelPreviewCaptions.length] %>" loading="lazy">
-            <span class="reel-shade" aria-hidden="true"></span>
-            <span class="reel-badge">REELS</span>
-            <span class="reel-play" aria-hidden="true"></span>
-            <span class="reel-copy">
-              <small><%= model.content.instagram.handle %></small>
-              <strong><%= reelPreviewCaptions[index % reelPreviewCaptions.length] %></strong>
-            </span>
-            <span class="reel-actions" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </a>
-        <% }) %>
       </div>
     </div>
   </section>
@@ -341,6 +344,7 @@
     </dl>
   </div>
 </footer>
+</div>
 
 <script type="application/json" id="chatbot-data"><%- chatbotJson %></script>
 
