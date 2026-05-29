@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",
+    "cloudflare:setup": "node scripts/setup-cloudflare-tunnel.mjs",
+    "cloudflare:tunnel": "bash scripts/run-cloudflare-tunnel.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:browser": "playwright test",
