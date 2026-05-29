@@ -1,23 +1,43 @@
-# 클래식을 좋아하세요 Landing
+# 클래식을 좋아하세요
 
-클래식 음악이라는 취향을 중심으로 사람을 연결하는 로테이션 소개팅 랜딩페이지입니다.
-공개 페이지는 현재 모집 중인 기수와 브랜드 콘텐츠를 보여주고, 운영자는 가벼운 관리자 화면에서 일정, 신청 링크, 지원현황, FAQ, 법무 정보를 직접 수정할 수 있습니다.
+<p align="center">
+  <img src="public/assets/images/doyoulikeclassic-wordmark-gold.png" alt="클래식을 좋아하세요" width="360">
+</p>
 
-## Overview
+<p align="center">
+  <strong>클래식 취향을 기준으로 설계한 프리미엄 로테이션 소개팅 운영 플랫폼</strong>
+</p>
 
-이 프로젝트는 별도의 CMS 없이 작은 운영팀이 빠르게 행사 페이지를 관리할 수 있도록 만든 Express 기반 웹 애플리케이션입니다.
+<p align="center">
+  행사 랜딩, 지원 현황, 신청 CTA, 운영자 대시보드를 하나로 묶어<br>
+  작은 운영팀도 기수별 모집을 신뢰감 있게 관리할 수 있도록 만든 웹 애플리케이션입니다.
+</p>
 
-- 공개 랜딩페이지: 행사 소개, 일정, 참가비, 지원현황, 진행 방식, Instagram, FAQ 제공
-- 관리자 대시보드: 일정 추가/수정, 대표 일정 지정, CTA 상태 관리, 콘텐츠 편집
-- 데이터 저장소: SQLite 기반 로컬 DB
-- 신청 흐름: 개인정보는 저장하지 않고 Google Forms로 연결
-- 테스트: Vitest 기반 단위/통합 테스트와 Playwright 브라우저 테스트
+<p align="center">
+  <code>Rotation Dating</code>
+  <code>Classic Community</code>
+  <code>Express</code>
+  <code>SQLite</code>
+  <code>Admin Dashboard</code>
+</p>
 
-## Product Direction
+## Service Concept
 
-서비스의 핵심은 "어색한 소개팅"보다 "취향이 있는 만남"에 가깝습니다.
+`클래식을 좋아하세요`는 클래식 음악이라는 취향을 중심으로 사람을 연결하는 로테이션 소개팅 서비스입니다.
 
-클래식 공연, 연주자, 악장, 좋아하는 무대 이야기를 자연스러운 대화의 출발점으로 삼고, 여러 사람을 짧게 만나는 로테이션 방식으로 부담을 낮춥니다. 랜딩페이지는 이 분위기를 차분하고 신뢰감 있게 전달하는 데 초점을 둡니다.
+단순한 매칭 이벤트가 아니라, 공연과 연주, 악장, 좋아하는 무대 이야기를 자연스러운 대화의 출발점으로 삼습니다. 여러 사람을 짧고 밀도 있게 만나는 로테이션 방식으로 부담을 낮추고, 참여자는 취향과 분위기를 기준으로 더 편안하게 상대를 알아갈 수 있습니다.
+
+## Product Overview
+
+이 저장소는 서비스 운영을 위한 Express 기반 랜딩 페이지와 경량 관리자 도구를 담고 있습니다. 별도의 CMS 없이도 행사 일정, 신청 링크, 지원 현황, FAQ, 브랜드 콘텐츠를 빠르게 수정할 수 있도록 설계했습니다.
+
+| Area | What it does |
+| --- | --- |
+| Public Landing | 행사 소개, 모집 상태, 일정, 참가비, 진행 방식, FAQ, Instagram 콘텐츠 노출 |
+| Application Flow | 신청 버튼과 Google Forms를 연결해 개인정보 저장 범위를 최소화 |
+| Admin Dashboard | 기수별 일정, CTA 상태, 지원 현황, 콘텐츠 블록, 법무/문의 정보 관리 |
+| Operations | SQLite 기반 데이터 저장, audit log, 세션 보안, CSRF 보호 |
+| Quality | Vitest와 Playwright 기반 테스트로 주요 운영 흐름 검증 |
 
 ## Key Features
 
