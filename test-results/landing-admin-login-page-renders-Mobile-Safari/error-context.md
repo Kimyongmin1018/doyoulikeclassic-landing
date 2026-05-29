@@ -7,7 +7,7 @@
 # Test info
 
 - Name: landing.spec.js >> admin login page renders
-- Location: tests/playwright/landing.spec.js:73:1
+- Location: tests/playwright/landing.spec.js:75:1
 
 # Error details
 

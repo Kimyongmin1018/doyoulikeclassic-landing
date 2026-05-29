@@ -4,7 +4,6 @@
   const ctaLabel = featuredEvent?.cta.label || "신청 오픈 예정";
   const canApply = Boolean(ctaHref);
   const headerTitle = model.content.hero.headerTitle || "클래식을 좋아하세요..?";
-  const nextCtaLabel = model.content.hero.nextCtaLabel || "다음기수 신청하기";
   const participants = model.content.participants;
   const displayParticipants = participants.length && !participants.includes("공무원") ? [...participants, "공무원"] : participants;
   const heroSubtitle = model.content.hero.subheadline || "";
@@ -12,9 +11,7 @@
     .map((line) => line.trim())
     .filter(Boolean);
   const heroImages = [
-    "/assets/images/classic-salon-hero.jpg",
-    "/assets/images/rotation-conversation.jpg",
-    "/assets/images/classic-detail.jpg"
+    "/assets/images/hero-classic-rotation-room-v2.png"
   ];
   const previousStatusImages = [
     { label: "1기", src: "/assets/images/participant-status-1st.jpg" },
@@ -50,16 +47,10 @@
     .replace(/>/g, "\\u003e")
     .replace(/&/g, "\\u0026");
   const reelPreviewImages = [
-    "/assets/images/classic-salon-hero.jpg",
-    "/assets/images/rotation-conversation.jpg",
-    "/assets/images/classic-detail.jpg",
-    "/assets/images/classic-salon-hero.jpg"
-  ];
-  const reelPreviewCaptions = [
-    "처음 만나는 클래식 살롱의 공기",
-    "짧지만 깊게 이어지는 로테이션 대화",
-    "공연과 음악 취향으로 가까워지는 순간",
-    "서울 강남권에서 열리는 다음 만남"
+    "/assets/images/instagram-reel-thumb-1.jpg",
+    "/assets/images/instagram-reel-thumb-2.jpg",
+    "/assets/images/instagram-reel-thumb-3.jpg",
+    "/assets/images/instagram-reel-thumb-4.jpg"
   ];
 %>
 
@@ -132,7 +123,6 @@
               <% } else { %>
                 <span class="button button-disabled button-card-radius" aria-disabled="true"><%= ctaLabel %></span>
               <% } %>
-              <span class="button button-white button-card-radius event-next-button" aria-disabled="true"><%= nextCtaLabel %></span>
             </div>
           </div>
         </div>
@@ -265,18 +255,12 @@
         <div class="reel-grid instagram-feed" aria-label="Instagram Reels 미리보기">
           <% model.content.instagram.reels.forEach((url, index) => { %>
             <a class="reel-card reveal" href="<%= url %>" target="_blank" rel="noreferrer" aria-label="Instagram Reel <%= String(index + 1).padStart(2, "0") %> 새 창으로 보기">
-              <img src="<%= reelPreviewImages[index % reelPreviewImages.length] %>" alt="<%= reelPreviewCaptions[index % reelPreviewCaptions.length] %>" loading="lazy">
+              <img src="<%= reelPreviewImages[index % reelPreviewImages.length] %>" alt="Instagram Reel <%= String(index + 1).padStart(2, "0") %> 썸네일" loading="lazy">
               <span class="reel-shade" aria-hidden="true"></span>
               <span class="reel-badge">REELS</span>
               <span class="reel-play" aria-hidden="true"></span>
               <span class="reel-copy">
                 <small><%= model.content.instagram.handle %></small>
-                <strong><%= reelPreviewCaptions[index % reelPreviewCaptions.length] %></strong>
-              </span>
-              <span class="reel-actions" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
               </span>
             </a>
           <% }) %>
