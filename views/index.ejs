@@ -186,9 +186,6 @@
 
   <section id="why-classic" class="section why-section" aria-labelledby="why-title">
     <div class="section-inner split-grid">
-      <div class="image-stack reveal">
-        <img src="/assets/images/rotation-conversation.jpg" alt="클래식 음악을 주제로 대화하는 테이블 분위기">
-      </div>
       <div class="reveal">
         <div class="section-heading">
           <p class="eyebrow section-eyebrow">About</p>
@@ -285,6 +282,7 @@
           <% }) %>
         </div>
         <div class="instagram-profile-action reveal">
+          <img class="instagram-profile-photo" src="/assets/images/doyoulikeclassic-logo.jpg" alt="doyoulike.classic 프로필">
           <strong><%= model.content.instagram.handle %></strong>
           <% if (model.content.instagram.url) { %>
             <a class="button button-white button-card-radius" href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer">Instagram에서 보기</a>
@@ -333,15 +331,18 @@
         <p><%= footerDescription %></p>
       </div>
     </div>
-    <dl class="footer-info-grid">
-      <div><dt>Instagram</dt><dd><a href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer"><%= model.content.instagram.handle %></a></dd></div>
-      <div>
-        <dt>Contact</dt>
-        <dd>
-          <a href="#chatbot" data-chatbot-open><%= model.content.legal.contact || "Q&A 챗봇" %></a>
-        </dd>
-      </div>
-    </dl>
+    <div class="footer-info-stack">
+      <dl class="footer-info-grid">
+        <div><dt>Instagram</dt><dd><a href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer"><%= model.content.instagram.handle %></a></dd></div>
+        <div>
+          <dt>Contact</dt>
+          <dd>
+            <a href="#chatbot" data-chatbot-open><%= model.content.legal.contact || "Q&A 챗봇" %></a>
+          </dd>
+        </div>
+      </dl>
+      <p class="footer-copyright">©doyoulikeclassic. All rights reserved.</p>
+    </div>
   </div>
 </footer>
 </div>

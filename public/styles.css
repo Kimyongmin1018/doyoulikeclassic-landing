@@ -71,6 +71,7 @@ body {
   .site-scale {
     width: 125%;
     min-height: 100vh;
+    margin-left: -12.5%;
     zoom: 0.8;
   }
 
@@ -92,6 +93,7 @@ body {
 
   @supports (zoom: 1) {
     .site-header {
+      left: -12.5%;
       right: auto;
       width: 125%;
       zoom: 0.8;
@@ -211,6 +213,10 @@ main {
 }
 
 .header-menu-card {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  z-index: 45;
   justify-self: center;
   display: inline-flex;
   align-items: center;
@@ -218,8 +224,9 @@ main {
   gap: 22px;
   width: fit-content;
   max-width: 100%;
-  margin-top: 10px;
+  margin-top: 0;
   padding: 11px 24px;
+  transform: translateX(-50%);
   border: 1px solid rgba(17, 17, 24, 0.08);
   border-radius: 28px;
   background: rgba(251, 249, 246, 0.76);
@@ -228,9 +235,13 @@ main {
 }
 
 .header-cta {
-  justify-self: end;
+  position: fixed;
+  top: 30px;
+  right: 32px;
+  z-index: 40;
+  justify-self: auto;
   display: inline-flex;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .header-cta .button {
@@ -374,6 +385,8 @@ main > .section > .section-inner {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 10px 20px;
+  font-size: 17px;
 }
 
 .hero-subtitle,
@@ -933,8 +946,18 @@ dd {
 }
 
 .why-section .split-grid {
-  grid-template-columns: minmax(220px, 0.48fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
+  justify-items: start;
+}
+
+.why-section .reveal {
+  width: min(780px, 100%);
+  text-align: left;
+}
+
+.why-section .section-heading {
+  justify-items: start;
 }
 
 .reason-list {
@@ -953,6 +976,7 @@ dd {
 .reason-list h3 {
   display: flex;
   align-items: baseline;
+  justify-content: flex-start;
   gap: 14px;
 }
 
@@ -1215,6 +1239,15 @@ dd {
   align-self: start;
   min-width: 184px;
   text-align: center;
+  margin-top: 34px;
+}
+
+.instagram-profile-photo {
+  width: 124px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 14px 34px rgba(67, 40, 19, 0.22);
 }
 
 .instagram-feed-row {
@@ -1518,6 +1551,8 @@ main > .chatbot-section > .chatbot-panel-inline {
 
 .footer-grid {
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  column-gap: 48px;
+  row-gap: 6px;
   align-items: start;
 }
 
@@ -1526,6 +1561,7 @@ main > .chatbot-section > .chatbot-panel-inline {
   grid-template-columns: auto minmax(0, 1fr);
   gap: 16px;
   align-items: center;
+  transform: translateY(-10px);
 }
 
 .footer-logo {
@@ -1558,10 +1594,21 @@ main > .chatbot-section > .chatbot-panel-inline {
   gap: 16px 28px;
 }
 
+.footer-info-stack {
+  display: grid;
+  gap: 4px;
+}
+
 .footer-info-grid div {
   display: grid;
   grid-template-columns: 84px minmax(0, 1fr);
   gap: 12px;
+}
+
+.footer-copyright {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
 }
 
 .mobile-cta {
