@@ -269,6 +269,14 @@
         문의 채널
         <input name="contact" value="<%= adminContent.contact %>" required maxlength="120">
       </label>
+      <label class="admin-form-wide">
+        카카오톡 오픈채팅 URL
+        <input name="directContactUrl" value="<%= adminContent.directContactUrl %>" maxlength="240" inputmode="url" placeholder="https://open.kakao.com/o/...">
+      </label>
+      <label>
+        직접 문의 버튼 라벨
+        <input name="directContactLabel" value="<%= adminContent.directContactLabel %>" required maxlength="60">
+      </label>
       <label>
         도메인
         <input name="domain" value="<%= adminContent.domain %>" required maxlength="80">

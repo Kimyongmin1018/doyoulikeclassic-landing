@@ -16,5 +16,6 @@ describe("rendering", () => {
     expect(response.text).toContain("자주 묻는 질문");
     expect(response.text).toContain("Q&amp;A 챗봇");
     expect(response.text).toContain("궁금한 점은 챗봇에게 바로 물어보세요.");
+    expect(response.text).toContain("directContactLabel");
   });
 });

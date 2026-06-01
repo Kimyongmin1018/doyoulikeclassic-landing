@@ -1748,6 +1748,22 @@ main > .chatbot-section > .chatbot-panel-inline {
   cursor: pointer;
 }
 
+.chatbot-direct-contact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin: 0 12px 12px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  color: var(--color-storm-gray);
+  background: #e9e3d8;
+  font-family: var(--font-haas-grot-disp);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .chatbot-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

@@ -22,11 +22,15 @@
   ];
   const footerTitle = model.content.legal.footerTitle || "클래식을 좋아하세요..?";
   const footerDescription = model.content.legal.footerDescription || "서울 강남권에서 열리는 국내 최초 클래식 취향 기반 로테이션 소개팅";
+  const directContactUrl = model.content.legal.directContactUrl || "";
+  const directContactLabel = model.content.legal.directContactLabel || "관리자에게 직접 문의하기";
   const chatbotQuickReplies = ["신청 방법", "일정", "장소", "참가비", "개인정보"];
   const chatbotData = {
     applyUrl: ctaHref,
     applyLabel: ctaLabel,
     instagramUrl: model.content.instagram.url || "",
+    directContactUrl,
+    directContactLabel,
     faq: model.content.faq || [],
     event: featuredEvent
       ? {
@@ -352,6 +356,9 @@
         <button type="button" data-chatbot-query="<%= reply %>"><%= reply %></button>
       <% }) %>
     </div>
+    <% if (directContactUrl) { %>
+      <a class="chatbot-direct-contact" href="<%= directContactUrl %>" target="_blank" rel="noreferrer" data-analytics-event="menu_click" data-analytics-label="관리자 직접 문의"><%= directContactLabel %></a>
+    <% } %>
     <form class="chatbot-form" data-chatbot-form>
       <label for="chatbot-input">질문 입력</label>
       <input id="chatbot-input" name="message" placeholder="예: 신청은 어떻게 하나요?" autocomplete="off">

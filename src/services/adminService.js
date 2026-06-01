@@ -30,6 +30,16 @@ const publicImageUrl = z.string().trim().min(1).max(240).refine((value) => {
   }
 }, "검색 이미지는 /assets/... 경로 또는 https URL만 사용할 수 있습니다.");
 
+const optionalHttpsUrl = z.string().trim().max(240).refine((value) => {
+  if (!value) return true;
+
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}, "https URL만 사용할 수 있습니다.");
+
 export const eventInputSchema = z.object({
   publicTitle: z.string().trim().min(1).max(80),
   generationLabel: z.string().trim().min(1).max(40),
@@ -76,6 +86,8 @@ export const contentInputSchema = z.object({
   representative: z.string().trim().min(1).max(80),
   registrationNumber: z.string().trim().max(80).optional().default(""),
   contact: z.string().trim().min(1).max(120),
+  directContactUrl: optionalHttpsUrl.optional().default(""),
+  directContactLabel: z.string().trim().min(1).max(60).optional().default("관리자에게 직접 문의하기"),
   domain: z.string().trim().min(1).max(80)
 });
 
@@ -327,6 +339,10 @@ export function getContentForAdmin(db) {
     representative: typeof legal.representative === "string" ? legal.representative : "",
     registrationNumber: typeof legal.registrationNumber === "string" ? legal.registrationNumber : "",
     contact: typeof legal.contact === "string" ? legal.contact : "",
+    directContactUrl: typeof legal.directContactUrl === "string" ? legal.directContactUrl : "",
+    directContactLabel: typeof legal.directContactLabel === "string"
+      ? legal.directContactLabel
+      : "관리자에게 직접 문의하기",
     domain: typeof legal.domain === "string" ? legal.domain : "http://doyoulikeclassic.com/"
   };
 }
@@ -523,6 +539,8 @@ export function updateContent(db, input) {
       representative: data.representative,
       registrationNumber: data.registrationNumber,
       contact: data.contact,
+      directContactUrl: data.directContactUrl,
+      directContactLabel: data.directContactLabel,
       domain: data.domain
     });
   })();

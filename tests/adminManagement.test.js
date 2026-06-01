@@ -57,6 +57,8 @@ function contentPayload(overrides = {}) {
     representative: "홍길동",
     registrationNumber: "123-45-67890",
     contact: "Q&A 챗봇",
+    directContactUrl: "https://open.kakao.com/o/test",
+    directContactLabel: "관리자에게 직접 문의하기",
     domain: "demo.doyoulikeclassic.com",
     ...overrides
   };
@@ -406,6 +408,8 @@ describe("admin management", () => {
     expect(publicPage.text).toContain("Q&amp;A 챗봇");
     expect(publicPage.text).toContain("궁금한 점은 챗봇에게 바로 물어보세요.");
     expect(publicPage.text).toContain("FAQ와 현재 행사 정보 기준");
+    expect(publicPage.text).toContain("https://open.kakao.com/o/test");
+    expect(publicPage.text).toContain("관리자에게 직접 문의하기");
     expect(publicPage.text).not.toContain("demo.doyoulikeclassic.com");
     expect(publicPage.text).not.toContain("홍길동");
     expect(publicPage.text).not.toContain("테스트 클래식 살롱");

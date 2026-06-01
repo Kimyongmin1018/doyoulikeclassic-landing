@@ -117,6 +117,8 @@ const contentBlocks = {
     representative: "이채연",
     registrationNumber: "",
     contact: "Q&A 챗봇",
+    directContactUrl: "https://open.kakao.com/o/s7VjD7wi",
+    directContactLabel: "관리자에게 직접 문의하기",
     domain: "http://doyoulikeclassic.com/"
   }
 };
