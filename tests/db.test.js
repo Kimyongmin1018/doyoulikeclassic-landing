@@ -52,7 +52,7 @@ describe("database", () => {
       .all()
       .map((row) => row.block_key);
 
-    expect(blockKeys).toEqual(["applicationStatus", "faq", "hero", "instagram", "legal", "participants"]);
+    expect(blockKeys).toEqual(["applicationStatus", "faq", "hero", "instagram", "legal", "participants", "seo"]);
   });
 
   it("preserves admin edits to seeded event, child rows, and hero content when reseeded", () => {

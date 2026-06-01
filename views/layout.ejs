@@ -1,14 +1,49 @@
+<%
+  const pageMeta = typeof meta !== "undefined" ? meta : {};
+  const metaTitle = pageMeta.title || title;
+  const metaDescription = pageMeta.description || "클래식을 사랑하는 사람들을 위한 서울 강남권 로테이션 소개팅";
+  const metaCanonicalUrl = pageMeta.canonicalUrl || "";
+  const metaImageUrl = pageMeta.imageUrl || "";
+  const metaImageAlt = pageMeta.imageAlt || metaTitle;
+  const metaSiteName = pageMeta.siteName || "클래식을 좋아하세요";
+  const naverVerification = pageMeta.naverVerification || "e4244507795bed3d205bec2c7b58aa64a6242b9d";
+%>
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= title %></title>
-  <meta name="description" content="클래식을 사랑하는 사람들을 위한 서울 강남권 로테이션 소개팅">
-  <link rel="stylesheet" href="/styles.css?v=20260529-instagram-profile-shift-1">
+  <title><%= metaTitle %></title>
+  <meta name="description" content="<%= metaDescription %>">
+  <% if (naverVerification) { %>
+    <meta name="naver-site-verification" content="<%= naverVerification %>">
+  <% } %>
+  <% if (pageMeta.title) { %>
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <link rel="canonical" href="<%= metaCanonicalUrl %>">
+    <link rel="image_src" href="<%= metaImageUrl %>">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:site_name" content="<%= metaSiteName %>">
+    <meta property="og:title" content="<%= metaTitle %>">
+    <meta property="og:description" content="<%= metaDescription %>">
+    <meta property="og:url" content="<%= metaCanonicalUrl %>">
+    <meta property="og:image" content="<%= metaImageUrl %>">
+    <meta property="og:image:secure_url" content="<%= metaImageUrl %>">
+    <meta property="og:image:width" content="<%= pageMeta.imageWidth %>">
+    <meta property="og:image:height" content="<%= pageMeta.imageHeight %>">
+    <meta property="og:image:alt" content="<%= metaImageAlt %>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<%= metaTitle %>">
+    <meta name="twitter:description" content="<%= metaDescription %>">
+    <meta name="twitter:image" content="<%= metaImageUrl %>">
+    <meta name="twitter:image:alt" content="<%= metaImageAlt %>">
+    <script type="application/ld+json"><%- pageMeta.jsonLd %></script>
+  <% } %>
+  <link rel="stylesheet" href="/styles.css?v=20260601-admin-analytics-1">
 </head>
 <body>
   <%- body %>
-  <script src="/site.js?v=20260529-instagram-profile-shift-1" defer></script>
+  <script src="/site.js?v=20260601-admin-analytics-1" defer></script>
 </body>
 </html>

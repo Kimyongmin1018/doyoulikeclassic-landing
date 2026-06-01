@@ -157,7 +157,7 @@
   </section>
 
   <section class="admin-card content-editor" aria-labelledby="content-editor-title">
-    <h2 id="content-editor-title">홈 콘텐츠 / 법무 정보</h2>
+    <h2 id="content-editor-title">홈 콘텐츠 / 검색 미리보기 / 법무 정보</h2>
     <form method="post" action="/admin/content" class="admin-form">
       <input type="hidden" name="csrfToken" value="<%= csrfToken %>">
 
@@ -230,6 +230,26 @@
         <textarea name="instagramReelsText" maxlength="1200"><%= adminContent.instagramReelsText %></textarea>
       </label>
       <label class="admin-form-wide">
+        검색 제목
+        <input name="seoTitle" value="<%= adminContent.seoTitle %>" required maxlength="120">
+      </label>
+      <label class="admin-form-wide">
+        검색 설명
+        <textarea name="seoDescription" required maxlength="500"><%= adminContent.seoDescription %></textarea>
+      </label>
+      <label class="admin-form-wide">
+        검색/공유 미리보기 이미지 URL
+        <input name="seoImageUrl" value="<%= adminContent.seoImageUrl %>" required maxlength="240">
+      </label>
+      <label>
+        검색 이미지 대체 문구
+        <input name="seoImageAlt" value="<%= adminContent.seoImageAlt %>" required maxlength="120">
+      </label>
+      <label>
+        네이버 사이트 인증 코드
+        <input name="naverVerification" value="<%= adminContent.naverVerification %>" maxlength="120">
+      </label>
+      <label class="admin-form-wide">
         FAQ
         <textarea name="faqText" required maxlength="3000"><%= adminContent.faqText %></textarea>
       </label>
@@ -269,7 +289,60 @@
         <span><strong><%= trafficLog.totalUniqueVisitors %></strong><small>시간대별 방문자 합계</small></span>
         <span><strong><%= trafficLog.totalPageViews %></strong><small>페이지뷰 합계</small></span>
         <span><strong><%= trafficLog.busiestHour?.uniqueVisitors || 0 %></strong><small>최고 시간대 방문자</small></span>
+        <span><strong><%= trafficLog.applyClickCount %></strong><small>신청 버튼 클릭</small></span>
+        <span><strong><%= trafficLog.menuClickCount %></strong><small>메뉴 클릭</small></span>
       </div>
+    </div>
+
+    <div class="traffic-insights" aria-label="클릭과 유입 경로 요약">
+      <section>
+        <h3>신청하기 버튼 클릭</h3>
+        <% if (trafficLog.applyClickRows.length) { %>
+          <ul>
+            <% trafficLog.applyClickRows.forEach((row) => { %>
+              <li><span><%= row.label || "신청 버튼" %></span><strong><%= row.count %>회</strong><small><%= row.uniqueVisitors %>명</small></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p>아직 기록된 클릭이 없습니다.</p>
+        <% } %>
+      </section>
+      <section>
+        <h3>메뉴 클릭 순위</h3>
+        <% if (trafficLog.menuClickRows.length) { %>
+          <ul>
+            <% trafficLog.menuClickRows.forEach((row) => { %>
+              <li><span><%= row.label || "메뉴" %></span><strong><%= row.count %>회</strong><small><%= row.uniqueVisitors %>명</small></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p>아직 기록된 메뉴 클릭이 없습니다.</p>
+        <% } %>
+      </section>
+      <section>
+        <h3>유입 경로</h3>
+        <% if (trafficLog.sourceRows.length) { %>
+          <ul>
+            <% trafficLog.sourceRows.forEach((row) => { %>
+              <li><span><%= row.source || "direct" %></span><strong><%= row.uniqueVisitors %>명</strong><small><%= row.count %>회</small></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p>아직 기록된 유입 경로가 없습니다.</p>
+        <% } %>
+      </section>
+      <section>
+        <h3>유입 검색어 / UTM</h3>
+        <% if (trafficLog.searchTermRows.length) { %>
+          <ul>
+            <% trafficLog.searchTermRows.forEach((row) => { %>
+              <li><span><%= row.searchTerm %></span><strong><%= row.count %>회</strong><small><%= row.uniqueVisitors %>명</small></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p>검색엔진이 검색어를 전달하지 않으면 비어 있을 수 있습니다.</p>
+        <% } %>
+      </section>
     </div>
 
     <div class="traffic-chart" aria-label="최근 시간대별 방문자 막대그래프">

@@ -75,6 +75,14 @@ const contentBlocks = {
       "https://www.instagram.com/reel/DWrNwa8k7ZY/?igsh=MmI2emV3c2x3N2l6"
     ]
   },
+  seo: {
+    title: "[클래식 로테이션 소개팅] 클래식을 좋아하세요..?",
+    description:
+      "전공자부터 애호가까지, 클래식을 사랑하는 누구나! 좋아하는 음악이 같다는 건,\n이미 좋은 시작입니다.\n같은 취향, 같은 설렘을 만나는 클래식 로테이션 소개팅.",
+    imageUrl: "/assets/images/search-preview-classic-rotation.jpg",
+    imageAlt: "클래식을 좋아하세요 클래식 로테이션 소개팅 포스터",
+    naverVerification: "e4244507795bed3d205bec2c7b58aa64a6242b9d"
+  },
   faq: [
     {
       question: "신청은 선착순인가요?",

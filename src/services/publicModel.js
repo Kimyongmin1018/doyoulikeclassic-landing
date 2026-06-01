@@ -22,7 +22,14 @@ const contentFallbacks = {
   },
   instagram: { handle: "", url: "", reels: [] },
   faq: [],
-  legal: {}
+  legal: {},
+  seo: {
+    title: "",
+    description: "",
+    imageUrl: "",
+    imageAlt: "",
+    naverVerification: ""
+  }
 };
 
 const contentSchemas = {
@@ -53,7 +60,14 @@ const contentSchemas = {
     question: z.string(),
     answer: z.string()
   })),
-  legal: z.object({}).passthrough()
+  legal: z.object({}).passthrough(),
+  seo: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    imageUrl: z.string().optional(),
+    imageAlt: z.string().optional(),
+    naverVerification: z.string().optional()
+  })
 };
 
 function normalizeHttpsUrl(value) {
@@ -125,7 +139,8 @@ export function getContentBlocks(db) {
       reels: instagram.reels.map(normalizeHttpsUrl).filter(Boolean)
     },
     faq: parseBlock(byKey.faq, contentFallbacks.faq, contentSchemas.faq),
-    legal: parseBlock(byKey.legal, contentFallbacks.legal, contentSchemas.legal)
+    legal: parseBlock(byKey.legal, contentFallbacks.legal, contentSchemas.legal),
+    seo: parseBlock(byKey.seo, contentFallbacks.seo, contentSchemas.seo)
   };
 }
 

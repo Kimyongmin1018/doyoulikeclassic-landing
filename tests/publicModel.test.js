@@ -171,7 +171,14 @@ describe("public model", () => {
         reels: expect.any(Array)
       }),
       faq: [],
-      legal: expect.any(Object)
+      legal: expect.any(Object),
+      seo: expect.objectContaining({
+        title: expect.any(String),
+        description: expect.any(String),
+        imageUrl: expect.any(String),
+        imageAlt: expect.any(String),
+        naverVerification: expect.any(String)
+      })
     });
   });
 

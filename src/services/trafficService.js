@@ -5,6 +5,8 @@ const visitorCookieName = "public_visitor";
 const visitorCookieMaxAgeMs = 1000 * 60 * 60 * 24 * 180;
 const hourMs = 1000 * 60 * 60;
 const defaultTrafficHours = 72;
+const allowedEventTypes = new Set(["apply_click", "menu_click"]);
+const searchParamNames = ["utm_term", "q", "query", "keyword", "n_query", "search_query"];
 
 function getHourBucket(date = new Date()) {
   const timestamp = date instanceof Date ? date.getTime() : new Date(date).getTime();
@@ -43,7 +45,73 @@ function buildHourBuckets(hours, now = new Date()) {
   return buckets;
 }
 
-export function recordPublicVisit(request, response, now = new Date()) {
+function truncateText(value, maxLength) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
+function getRequestPath(request) {
+  const rawPath = typeof request.path === "string" ? request.path : "/";
+  return rawPath.startsWith("/") ? rawPath.slice(0, 120) : "/";
+}
+
+function normalizeHostname(hostname) {
+  return hostname.toLowerCase().replace(/^www\./, "");
+}
+
+function getSearchTermFromUrl(url) {
+  for (const name of searchParamNames) {
+    const value = url.searchParams.get(name);
+    if (value) return truncateText(value, 120);
+  }
+
+  return "";
+}
+
+function classifySource(request) {
+  const landingUrl = new URL(request.originalUrl || request.url || "/", "https://doyoulikeclassic.com");
+  const utmSource = truncateText(landingUrl.searchParams.get("utm_source") || "", 80);
+  const utmMedium = truncateText(landingUrl.searchParams.get("utm_medium") || "", 80);
+  const utmTerm = getSearchTermFromUrl(landingUrl);
+  const referrer = truncateText(request.get("referer") || request.get("referrer") || "", 500);
+
+  if (utmSource) {
+    return {
+      referrer,
+      source: utmMedium ? `${utmSource} / ${utmMedium}` : utmSource,
+      searchTerm: utmTerm
+    };
+  }
+
+  if (!referrer) {
+    return { referrer: "", source: "direct", searchTerm: utmTerm };
+  }
+
+  try {
+    const referrerUrl = new URL(referrer);
+    const hostname = normalizeHostname(referrerUrl.hostname);
+    const source = hostname.includes("naver.")
+      ? "naver"
+      : hostname.includes("google.")
+        ? "google"
+        : hostname.includes("instagram.")
+          ? "instagram"
+          : hostname.includes("facebook.")
+            ? "facebook"
+            : hostname.includes("kakao.")
+              ? "kakao"
+              : hostname;
+
+    return {
+      referrer,
+      source,
+      searchTerm: utmTerm || getSearchTermFromUrl(referrerUrl)
+    };
+  } catch {
+    return { referrer, source: "unknown", searchTerm: utmTerm };
+  }
+}
+
+function getVisitorIdentity(request, response) {
   let visitorToken = request.signedCookies[visitorCookieName];
 
   if (typeof visitorToken !== "string" || visitorToken.length < 20) {
@@ -57,8 +125,31 @@ export function recordPublicVisit(request, response, now = new Date()) {
     });
   }
 
-  const visitorHash = hashToken(visitorToken, request.config.sessionSecret);
+  return hashToken(visitorToken, request.config.sessionSecret);
+}
+
+function insertTrafficEvent(db, row) {
+  db.prepare(`
+    insert into traffic_events (
+      visitor_hash, event_type, event_label, event_value, path, referrer, source, search_term, hour_bucket
+    ) values (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    row.visitorHash,
+    row.eventType,
+    row.eventLabel,
+    row.eventValue,
+    row.path,
+    row.referrer,
+    row.source,
+    row.searchTerm,
+    row.hourBucket
+  );
+}
+
+export function recordPublicVisit(request, response, now = new Date()) {
+  const visitorHash = getVisitorIdentity(request, response);
   const hourBucket = getHourBucket(now);
+  const sourceInfo = classifySource(request);
 
   request.db.prepare(`
     insert into traffic_visits (visitor_hash, hour_bucket, path)
@@ -67,6 +158,49 @@ export function recordPublicVisit(request, response, now = new Date()) {
       visit_count = visit_count + 1,
       last_seen_at = datetime('now')
   `).run(visitorHash, hourBucket);
+
+  insertTrafficEvent(request.db, {
+    visitorHash,
+    eventType: "visit",
+    eventLabel: sourceInfo.source,
+    eventValue: "",
+    path: getRequestPath(request),
+    referrer: sourceInfo.referrer,
+    source: sourceInfo.source,
+    searchTerm: sourceInfo.searchTerm,
+    hourBucket
+  });
+}
+
+export function recordTrafficEvent(request, response, now = new Date()) {
+  const eventType = truncateText(request.body?.eventType, 40);
+  if (!allowedEventTypes.has(eventType)) {
+    return false;
+  }
+
+  const sourceInfo = classifySource(request);
+
+  insertTrafficEvent(request.db, {
+    visitorHash: getVisitorIdentity(request, response),
+    eventType,
+    eventLabel: truncateText(request.body?.label, 120),
+    eventValue: truncateText(request.body?.value, 240),
+    path: truncateText(request.body?.path, 120) || getRequestPath(request),
+    referrer: sourceInfo.referrer,
+    source: sourceInfo.source,
+    searchTerm: truncateText(request.body?.searchTerm, 120) || sourceInfo.searchTerm,
+    hourBucket: getHourBucket(now)
+  });
+
+  return true;
+}
+
+function getTopRows(db, sql, params = []) {
+  return db.prepare(sql).all(...params).map((row) => ({
+    ...row,
+    count: Number(row.count || 0),
+    uniqueVisitors: Number(row.uniqueVisitors || 0)
+  }));
 }
 
 export function getTrafficLog(db, options = {}) {
@@ -105,6 +239,50 @@ export function getTrafficLog(db, options = {}) {
   }, null);
   const totalUniqueVisitors = rawRows.reduce((sum, row) => sum + Number(row.uniqueVisitors || 0), 0);
   const totalPageViews = rawRows.reduce((sum, row) => sum + Number(row.pageViews || 0), 0);
+  const eventSummaryRows = getTopRows(db, `
+    select event_type as eventType, count(*) as count, count(distinct visitor_hash) as uniqueVisitors
+    from traffic_events
+    where hour_bucket >= ?
+    group by event_type
+  `, [startBucket]);
+  const eventCounts = Object.fromEntries(eventSummaryRows.map((row) => [row.eventType, row]));
+  const sourceRows = getTopRows(db, `
+    select source, count(*) as count, count(distinct visitor_hash) as uniqueVisitors
+    from traffic_events
+    where event_type = 'visit'
+      and hour_bucket >= ?
+    group by source
+    order by uniqueVisitors desc, count desc, source asc
+    limit 10
+  `, [startBucket]);
+  const searchTermRows = getTopRows(db, `
+    select search_term as searchTerm, count(*) as count, count(distinct visitor_hash) as uniqueVisitors
+    from traffic_events
+    where event_type = 'visit'
+      and hour_bucket >= ?
+      and search_term != ''
+    group by search_term
+    order by count desc, uniqueVisitors desc, search_term asc
+    limit 10
+  `, [startBucket]);
+  const menuClickRows = getTopRows(db, `
+    select event_label as label, count(*) as count, count(distinct visitor_hash) as uniqueVisitors
+    from traffic_events
+    where event_type = 'menu_click'
+      and hour_bucket >= ?
+    group by event_label
+    order by count desc, uniqueVisitors desc, event_label asc
+    limit 10
+  `, [startBucket]);
+  const applyClickRows = getTopRows(db, `
+    select event_label as label, count(*) as count, count(distinct visitor_hash) as uniqueVisitors
+    from traffic_events
+    where event_type = 'apply_click'
+      and hour_bucket >= ?
+    group by event_label
+    order by count desc, uniqueVisitors desc, event_label asc
+    limit 10
+  `, [startBucket]);
 
   return {
     hours,
@@ -112,6 +290,12 @@ export function getTrafficLog(db, options = {}) {
     totalUniqueVisitors,
     totalPageViews,
     busiestHour,
-    timezoneLabel: "Asia/Seoul"
+    timezoneLabel: "Asia/Seoul",
+    applyClickCount: eventCounts.apply_click?.count || 0,
+    menuClickCount: eventCounts.menu_click?.count || 0,
+    sourceRows,
+    searchTermRows,
+    menuClickRows,
+    applyClickRows
   };
 }

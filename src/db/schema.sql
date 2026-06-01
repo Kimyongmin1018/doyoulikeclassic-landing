@@ -73,3 +73,23 @@ create table if not exists traffic_visits (
 
 create index if not exists traffic_visits_hour_bucket
 on traffic_visits(hour_bucket);
+
+create table if not exists traffic_events (
+  id integer primary key autoincrement,
+  visitor_hash text not null,
+  event_type text not null,
+  event_label text not null default '',
+  event_value text not null default '',
+  path text not null default '/',
+  referrer text not null default '',
+  source text not null default 'direct',
+  search_term text not null default '',
+  hour_bucket text not null,
+  created_at text not null default (datetime('now'))
+);
+
+create index if not exists traffic_events_type_hour
+on traffic_events(event_type, hour_bucket);
+
+create index if not exists traffic_events_source_hour
+on traffic_events(source, hour_bucket);

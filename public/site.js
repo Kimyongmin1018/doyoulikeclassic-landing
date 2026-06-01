@@ -29,6 +29,66 @@ document.querySelectorAll('a[href^="#"]').forEach((link) => {
   });
 });
 
+function getSearchTermFromUrl(url) {
+  const names = ["utm_term", "q", "query", "keyword", "n_query", "search_query"];
+
+  for (const name of names) {
+    const value = url.searchParams.get(name);
+    if (value) return value;
+  }
+
+  return "";
+}
+
+function getCurrentSearchTerm() {
+  try {
+    const currentUrl = new URL(window.location.href);
+    if (getSearchTermFromUrl(currentUrl)) return getSearchTermFromUrl(currentUrl);
+
+    if (document.referrer) {
+      return getSearchTermFromUrl(new URL(document.referrer));
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+}
+
+function sendAnalyticsEvent(eventType, label, value = "") {
+  const payload = JSON.stringify({
+    eventType,
+    label,
+    value,
+    path: window.location.pathname,
+    searchTerm: getCurrentSearchTerm()
+  });
+
+  if (navigator.sendBeacon) {
+    const blob = new Blob([payload], { type: "application/json" });
+    navigator.sendBeacon("/traffic/event", blob);
+    return;
+  }
+
+  fetch("/traffic/event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: payload,
+    keepalive: true,
+    credentials: "same-origin"
+  }).catch(() => {});
+}
+
+document.querySelectorAll("[data-analytics-event]").forEach((element) => {
+  element.addEventListener("click", () => {
+    sendAnalyticsEvent(
+      element.dataset.analyticsEvent || "",
+      element.dataset.analyticsLabel || element.textContent || "",
+      element instanceof HTMLAnchorElement ? element.href : ""
+    );
+  });
+});
+
 const snapSections = Array.from(
   document.querySelectorAll("main > .section:not(.chatbot-section)")
 );

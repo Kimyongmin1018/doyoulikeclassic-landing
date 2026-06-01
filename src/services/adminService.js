@@ -20,6 +20,16 @@ const googleFormUrl = httpsUrl.refine((value) => {
   return hostname === "forms.gle" || (hostname === "docs.google.com" && url.pathname.startsWith("/forms/"));
 }, "구글폼 URL만 사용할 수 있습니다.");
 
+const publicImageUrl = z.string().trim().min(1).max(240).refine((value) => {
+  if (value.startsWith("/")) return true;
+
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}, "검색 이미지는 /assets/... 경로 또는 https URL만 사용할 수 있습니다.");
+
 export const eventInputSchema = z.object({
   publicTitle: z.string().trim().min(1).max(80),
   generationLabel: z.string().trim().min(1).max(40),
@@ -52,6 +62,13 @@ export const contentInputSchema = z.object({
   instagramUrl: httpsUrl,
   instagramHandle: z.string().trim().min(1).max(60),
   instagramReelsText: z.string().trim().max(1200).optional().default(""),
+  seoTitle: z.string().trim().min(1).max(120).optional().default("[클래식 로테이션 소개팅] 클래식을 좋아하세요..?"),
+  seoDescription: z.string().trim().min(1).max(500).optional().default(
+    "전공자부터 애호가까지, 클래식을 사랑하는 누구나! 좋아하는 음악이 같다는 건,\n이미 좋은 시작입니다.\n같은 취향, 같은 설렘을 만나는 클래식 로테이션 소개팅."
+  ),
+  seoImageUrl: publicImageUrl.optional().default("/assets/images/search-preview-classic-rotation.jpg"),
+  seoImageAlt: z.string().trim().min(1).max(120).optional().default("클래식을 좋아하세요 클래식 로테이션 소개팅 포스터"),
+  naverVerification: z.string().trim().max(120).optional().default("e4244507795bed3d205bec2c7b58aa64a6242b9d"),
   faqText: z.string().trim().min(1).max(3000),
   footerTitle: z.string().trim().min(1).max(80).optional().default("클래식을 좋아하세요..?"),
   footerDescription: z.string().trim().min(1).max(160).optional().default("서울 강남권에서 열리는 국내 최초 클래식 취향 기반 로테이션 소개팅"),
@@ -270,6 +287,7 @@ export function getContentForAdmin(db) {
   const participants = readJsonBlock(db, "participants", []);
   const applicationStatus = readJsonBlock(db, "applicationStatus", {});
   const instagram = readJsonBlock(db, "instagram", {});
+  const seo = readJsonBlock(db, "seo", {});
   const faq = readJsonBlock(db, "faq", []);
   const legal = readJsonBlock(db, "legal", {});
 
@@ -291,6 +309,15 @@ export function getContentForAdmin(db) {
     instagramUrl: typeof instagram.url === "string" ? instagram.url : "",
     instagramHandle: typeof instagram.handle === "string" ? instagram.handle : "",
     instagramReelsText: serializeLines(normalizeArray(instagram.reels)),
+    seoTitle: typeof seo.title === "string" ? seo.title : "[클래식 로테이션 소개팅] 클래식을 좋아하세요..?",
+    seoDescription: typeof seo.description === "string"
+      ? seo.description
+      : "전공자부터 애호가까지, 클래식을 사랑하는 누구나! 좋아하는 음악이 같다는 건,\n이미 좋은 시작입니다.\n같은 취향, 같은 설렘을 만나는 클래식 로테이션 소개팅.",
+    seoImageUrl: typeof seo.imageUrl === "string" ? seo.imageUrl : "/assets/images/search-preview-classic-rotation.jpg",
+    seoImageAlt: typeof seo.imageAlt === "string" ? seo.imageAlt : "클래식을 좋아하세요 클래식 로테이션 소개팅 포스터",
+    naverVerification: typeof seo.naverVerification === "string"
+      ? seo.naverVerification
+      : "e4244507795bed3d205bec2c7b58aa64a6242b9d",
     faqText: serializeFaqText(normalizeFaq(faq)),
     footerTitle: typeof legal.footerTitle === "string" ? legal.footerTitle : "클래식을 좋아하세요..?",
     footerDescription: typeof legal.footerDescription === "string"
@@ -479,6 +506,13 @@ export function updateContent(db, input) {
       url: data.instagramUrl,
       handle: data.instagramHandle,
       reels
+    });
+    upsertContentBlock(db, "seo", {
+      title: data.seoTitle,
+      description: data.seoDescription,
+      imageUrl: data.seoImageUrl,
+      imageAlt: data.seoImageAlt,
+      naverVerification: data.naverVerification
     });
     upsertContentBlock(db, "faq", faq);
     upsertContentBlock(db, "legal", {
