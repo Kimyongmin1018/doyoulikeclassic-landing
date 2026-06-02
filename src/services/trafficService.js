@@ -4,45 +4,62 @@ import { hashToken } from "./security.js";
 const visitorCookieName = "public_visitor";
 const visitorCookieMaxAgeMs = 1000 * 60 * 60 * 24 * 180;
 const hourMs = 1000 * 60 * 60;
-const defaultTrafficHours = 72;
+const dayMs = hourMs * 24;
+const defaultTrafficDays = 30;
 const allowedEventTypes = new Set(["apply_click", "menu_click"]);
 const searchParamNames = ["utm_term", "q", "query", "keyword", "n_query", "search_query"];
+const countedApplyClickLabels = new Set(["상단 신청 버튼", "일정 카드 신청 버튼"]);
 
 function getHourBucket(date = new Date()) {
   const timestamp = date instanceof Date ? date.getTime() : new Date(date).getTime();
   return new Date(Math.floor(timestamp / hourMs) * hourMs).toISOString();
 }
 
-function getSeoulParts(hourBucket) {
+function getSeoulDateParts(hourBucket) {
   const parts = new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
+    year: "numeric",
     month: "numeric",
     day: "numeric",
-    weekday: "short",
-    hour: "2-digit",
-    hour12: false
+    weekday: "short"
   }).formatToParts(new Date(hourBucket));
   const byType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  const hour = byType.hour === "24" ? "00" : byType.hour;
+  const year = byType.year;
+  const month = String(byType.month).padStart(2, "0");
+  const day = String(byType.day).padStart(2, "0");
 
   return {
+    dateKey: `${year}-${month}-${day}`,
     dateLabel: `${byType.month}/${byType.day}`,
     weekdayLabel: byType.weekday,
-    hourLabel: `${hour}시`,
-    fullLabel: `${byType.month}/${byType.day} ${byType.weekday} ${hour}시`
+    fullLabel: `${byType.month}/${byType.day} ${byType.weekday}`
   };
 }
 
-function buildHourBuckets(hours, now = new Date()) {
-  const end = new Date(Math.floor(now.getTime() / hourMs) * hourMs);
-  const start = new Date(end.getTime() - (hours - 1) * hourMs);
-  const buckets = [];
+function getSeoulDateKey(date) {
+  return getSeoulDateParts(date.toISOString()).dateKey;
+}
 
-  for (let timestamp = start.getTime(); timestamp <= end.getTime(); timestamp += hourMs) {
-    buckets.push(new Date(timestamp).toISOString());
+function buildDateRows(days, now = new Date()) {
+  const rows = [];
+  const seenDateKeys = new Set();
+  const cursor = new Date(now.getTime());
+
+  while (rows.length < days) {
+    const labels = getSeoulDateParts(cursor.toISOString());
+    if (!seenDateKeys.has(labels.dateKey)) {
+      rows.push({
+        ...labels,
+        uniqueVisitors: 0,
+        pageViews: 0,
+        barPercent: 0
+      });
+      seenDateKeys.add(labels.dateKey);
+    }
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
   }
 
-  return buckets;
+  return rows.reverse();
 }
 
 function truncateText(value, maxLength) {
@@ -204,10 +221,11 @@ function getTopRows(db, sql, params = []) {
 }
 
 export function getTrafficLog(db, options = {}) {
-  const hours = options.hours || defaultTrafficHours;
+  const days = options.days || defaultTrafficDays;
   const now = options.now || new Date();
-  const buckets = buildHourBuckets(hours, now);
-  const startBucket = buckets[0];
+  const dateRows = buildDateRows(days, now);
+  const startDateKey = dateRows[0]?.dateKey || getSeoulDateKey(now);
+  const startBucket = new Date(now.getTime() - (days + 1) * dayMs).toISOString();
   const rawRows = db.prepare(`
     select
       hour_bucket as hourBucket,
@@ -219,26 +237,30 @@ export function getTrafficLog(db, options = {}) {
     group by hour_bucket
     order by hour_bucket asc
   `).all(startBucket);
-  const byBucket = new Map(rawRows.map((row) => [row.hourBucket, row]));
-  const maxVisitors = rawRows.reduce((max, row) => Math.max(max, row.uniqueVisitors), 0);
-  const rows = buckets.map((hourBucket) => {
-    const row = byBucket.get(hourBucket) || { uniqueVisitors: 0, pageViews: 0 };
-    const labels = getSeoulParts(hourBucket);
 
+  const byDate = new Map(dateRows.map((row) => [row.dateKey, { ...row }]));
+  rawRows.forEach((row) => {
+    const labels = getSeoulDateParts(row.hourBucket);
+    if (!byDate.has(labels.dateKey)) return;
+    const dateRow = byDate.get(labels.dateKey);
+    dateRow.uniqueVisitors += Number(row.uniqueVisitors || 0);
+    dateRow.pageViews += Number(row.pageViews || 0);
+  });
+
+  const maxVisitors = Array.from(byDate.values()).reduce((max, row) => Math.max(max, row.uniqueVisitors), 0);
+  const rows = dateRows.map((row) => {
+    const dateRow = byDate.get(row.dateKey) || row;
     return {
-      hourBucket,
-      ...labels,
-      uniqueVisitors: Number(row.uniqueVisitors || 0),
-      pageViews: Number(row.pageViews || 0),
-      barPercent: maxVisitors > 0 ? Math.max(8, Math.round((row.uniqueVisitors / maxVisitors) * 100)) : 0
+      ...dateRow,
+      barPercent: maxVisitors > 0 ? Math.max(8, Math.round((dateRow.uniqueVisitors / maxVisitors) * 100)) : 0
     };
   });
-  const busiestHour = rows.reduce((busiest, row) => {
+  const busiestDate = rows.reduce((busiest, row) => {
     if (!busiest || row.uniqueVisitors > busiest.uniqueVisitors) return row;
     return busiest;
   }, null);
-  const totalUniqueVisitors = rawRows.reduce((sum, row) => sum + Number(row.uniqueVisitors || 0), 0);
-  const totalPageViews = rawRows.reduce((sum, row) => sum + Number(row.pageViews || 0), 0);
+  const totalUniqueVisitors = rows.reduce((sum, row) => sum + Number(row.uniqueVisitors || 0), 0);
+  const totalPageViews = rows.reduce((sum, row) => sum + Number(row.pageViews || 0), 0);
   const eventSummaryRows = getTopRows(db, `
     select event_type as eventType, count(*) as count, count(distinct visitor_hash) as uniqueVisitors
     from traffic_events
@@ -283,15 +305,18 @@ export function getTrafficLog(db, options = {}) {
     order by count desc, uniqueVisitors desc, event_label asc
     limit 10
   `, [startBucket]);
+  const applyClickCount = applyClickRows
+    .filter((row) => countedApplyClickLabels.has(row.label))
+    .reduce((sum, row) => sum + row.count, 0);
 
   return {
-    hours,
+    days,
     rows,
     totalUniqueVisitors,
     totalPageViews,
-    busiestHour,
+    busiestDate,
     timezoneLabel: "Asia/Seoul",
-    applyClickCount: eventCounts.apply_click?.count || 0,
+    applyClickCount,
     menuClickCount: eventCounts.menu_click?.count || 0,
     sourceRows,
     searchTermRows,
