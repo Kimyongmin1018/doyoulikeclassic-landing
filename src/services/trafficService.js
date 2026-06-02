@@ -36,10 +36,6 @@ function getSeoulDateParts(hourBucket) {
   };
 }
 
-function getSeoulDateKey(date) {
-  return getSeoulDateParts(date.toISOString()).dateKey;
-}
-
 function buildDateRows(days, now = new Date()) {
   const rows = [];
   const seenDateKeys = new Set();
@@ -224,27 +220,30 @@ export function getTrafficLog(db, options = {}) {
   const days = options.days || defaultTrafficDays;
   const now = options.now || new Date();
   const dateRows = buildDateRows(days, now);
-  const startDateKey = dateRows[0]?.dateKey || getSeoulDateKey(now);
   const startBucket = new Date(now.getTime() - (days + 1) * dayMs).toISOString();
   const rawRows = db.prepare(`
     select
       hour_bucket as hourBucket,
-      count(*) as uniqueVisitors,
-      coalesce(sum(visit_count), 0) as pageViews
+      visitor_hash as visitorHash,
+      visit_count as visitCount
     from traffic_visits
     where path = '/'
       and hour_bucket >= ?
-    group by hour_bucket
     order by hour_bucket asc
   `).all(startBucket);
 
-  const byDate = new Map(dateRows.map((row) => [row.dateKey, { ...row }]));
+  const byDate = new Map(dateRows.map((row) => [row.dateKey, { ...row, visitorHashes: new Set() }]));
   rawRows.forEach((row) => {
     const labels = getSeoulDateParts(row.hourBucket);
     if (!byDate.has(labels.dateKey)) return;
     const dateRow = byDate.get(labels.dateKey);
-    dateRow.uniqueVisitors += Number(row.uniqueVisitors || 0);
-    dateRow.pageViews += Number(row.pageViews || 0);
+    dateRow.visitorHashes.add(row.visitorHash);
+    dateRow.pageViews += Number(row.visitCount || 0);
+  });
+
+  byDate.forEach((row) => {
+    row.uniqueVisitors = row.visitorHashes.size;
+    delete row.visitorHashes;
   });
 
   const maxVisitors = Array.from(byDate.values()).reduce((max, row) => Math.max(max, row.uniqueVisitors), 0);

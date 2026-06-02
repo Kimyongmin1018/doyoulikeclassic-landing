@@ -40,6 +40,18 @@ describe("traffic log", () => {
       path: "/"
     });
     await visitor.post("/traffic/event").send({
+      eventType: "apply_click",
+      label: "상단 신청 버튼",
+      value: "https://forms.gle/demo",
+      path: "/"
+    });
+    await visitor.post("/traffic/event").send({
+      eventType: "apply_click",
+      label: "모바일 하단 신청 버튼",
+      value: "https://forms.gle/demo",
+      path: "/"
+    });
+    await visitor.post("/traffic/event").send({
       eventType: "menu_click",
       label: "현장 영상",
       value: "#instagram",
@@ -50,14 +62,18 @@ describe("traffic log", () => {
 
     expect(dashboard.status).toBe(200);
     expect(dashboard.text).toContain("Traffic Log");
-    expect(dashboard.text).toContain("시간대별 홈페이지 접속");
+    expect(dashboard.text).toContain("날짜별 홈페이지 접속");
+    expect(dashboard.text).toContain("최근 30일 기준");
     expect(dashboard.text).toContain("고유 방문자");
     expect(dashboard.text).toContain("페이지뷰");
     expect(dashboard.text).toContain("신청 버튼 클릭");
+    expect(dashboard.text).toContain("<strong>2</strong><small>신청 버튼 클릭</small>");
     expect(dashboard.text).toContain("메뉴 클릭 순위");
     expect(dashboard.text).toContain("유입 경로");
     expect(dashboard.text).toContain("유입 검색어 / UTM");
     expect(dashboard.text).toContain("일정 카드 신청 버튼");
+    expect(dashboard.text).toContain("상단 신청 버튼");
+    expect(dashboard.text).toContain("모바일 하단 신청 버튼");
     expect(dashboard.text).toContain("현장 영상");
     expect(dashboard.text).toContain("naver");
     expect(dashboard.text).toContain("클래식");

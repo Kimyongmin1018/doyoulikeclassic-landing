@@ -63,12 +63,12 @@ export const contentInputSchema = z.object({
   nextCtaLabel: z.string().trim().min(1).max(40).optional().default("다음기수 신청하기"),
   participantsText: z.string().trim().min(1).max(500),
   applicationStatusUrl: httpsUrl,
-  applicationStatusUpdatedLabel: z.string().trim().min(1).max(80),
-  applicationStatusMaleSummary: z.string().trim().min(1).max(40),
-  applicationStatusFemaleSummary: z.string().trim().min(1).max(40),
-  applicationStatusMaleRowsText: z.string().trim().min(1).max(1000),
-  applicationStatusFemaleRowsText: z.string().trim().min(1).max(1000),
-  applicationStatusNotesText: z.string().trim().min(1).max(800),
+  applicationStatusUpdatedLabel: z.string().trim().max(80).optional().default(""),
+  applicationStatusMaleSummary: z.string().trim().max(40).optional().default(""),
+  applicationStatusFemaleSummary: z.string().trim().max(40).optional().default(""),
+  applicationStatusMaleRowsText: z.string().trim().max(1000).optional().default(""),
+  applicationStatusFemaleRowsText: z.string().trim().max(1000).optional().default(""),
+  applicationStatusNotesText: z.string().trim().max(800).optional().default(""),
   instagramUrl: httpsUrl,
   instagramHandle: z.string().trim().min(1).max(60),
   instagramReelsText: z.string().trim().max(1200).optional().default(""),
@@ -83,12 +83,12 @@ export const contentInputSchema = z.object({
   footerTitle: z.string().trim().min(1).max(80).optional().default("클래식을 좋아하세요..?"),
   footerDescription: z.string().trim().min(1).max(160).optional().default("서울 강남권에서 열리는 국내 최초 클래식 취향 기반 로테이션 소개팅"),
   businessName: z.string().trim().max(80).optional().default(""),
-  representative: z.string().trim().min(1).max(80),
+  representative: z.string().trim().max(80).optional().default(""),
   registrationNumber: z.string().trim().max(80).optional().default(""),
   contact: z.string().trim().min(1).max(120),
   directContactUrl: optionalHttpsUrl.optional().default(""),
   directContactLabel: z.string().trim().min(1).max(60).optional().default("관리자에게 직접 문의하기"),
-  domain: z.string().trim().min(1).max(80)
+  domain: z.string().trim().max(80).optional().default("http://doyoulikeclassic.com/")
 });
 
 export function listEvents(db) {
@@ -471,24 +471,21 @@ export function updateContent(db, input) {
   const data = contentInputSchema.parse(input);
   const badges = parseRequiredLines(data.heroBadgesText, "히어로 배지를 한 줄 이상 입력해 주세요.");
   const participants = parseRequiredLines(data.participantsText, "참여자 예시를 한 줄 이상 입력해 주세요.");
-  const applicationStatusMaleRows = parseRequiredLines(
-    data.applicationStatusMaleRowsText,
-    "남자 지원현황을 한 줄 이상 입력해 주세요."
-  );
-  const applicationStatusFemaleRows = parseRequiredLines(
-    data.applicationStatusFemaleRowsText,
-    "여자 지원현황을 한 줄 이상 입력해 주세요."
-  );
-  const applicationStatusNotes = parseRequiredLines(
-    data.applicationStatusNotesText,
-    "지원현황 안내 문구를 한 줄 이상 입력해 주세요."
-  );
   const reels = parseHttpsLines(data.instagramReelsText, "인스타그램 릴스 URL은 https 형식으로 입력해 주세요.");
   const faq = parseFaqText(data.faqText);
   const currentHero = readJsonBlock(db, "hero", {});
   const currentApplicationStatus = readJsonBlock(db, "applicationStatus", {});
   const currentInstagram = readJsonBlock(db, "instagram", {});
   const currentLegal = readJsonBlock(db, "legal", {});
+  const applicationStatusMaleRows = data.applicationStatusMaleRowsText
+    ? parseRequiredLines(data.applicationStatusMaleRowsText, "남자 지원현황을 한 줄 이상 입력해 주세요.")
+    : normalizeArray(currentApplicationStatus.maleRows);
+  const applicationStatusFemaleRows = data.applicationStatusFemaleRowsText
+    ? parseRequiredLines(data.applicationStatusFemaleRowsText, "여자 지원현황을 한 줄 이상 입력해 주세요.")
+    : normalizeArray(currentApplicationStatus.femaleRows);
+  const applicationStatusNotes = data.applicationStatusNotesText
+    ? parseRequiredLines(data.applicationStatusNotesText, "지원현황 안내 문구를 한 줄 이상 입력해 주세요.")
+    : normalizeArray(currentApplicationStatus.notes);
   const {
     kakaoChatUrl: _kakaoChatUrl,
     kakaoButtonLabel: _kakaoButtonLabel,
@@ -510,9 +507,9 @@ export function updateContent(db, input) {
     upsertContentBlock(db, "applicationStatus", {
       ...currentApplicationStatus,
       url: data.applicationStatusUrl,
-      updatedLabel: data.applicationStatusUpdatedLabel,
-      maleSummary: data.applicationStatusMaleSummary,
-      femaleSummary: data.applicationStatusFemaleSummary,
+      updatedLabel: data.applicationStatusUpdatedLabel || currentApplicationStatus.updatedLabel || "",
+      maleSummary: data.applicationStatusMaleSummary || currentApplicationStatus.maleSummary || "",
+      femaleSummary: data.applicationStatusFemaleSummary || currentApplicationStatus.femaleSummary || "",
       maleRows: applicationStatusMaleRows,
       femaleRows: applicationStatusFemaleRows,
       notes: applicationStatusNotes
@@ -536,12 +533,12 @@ export function updateContent(db, input) {
       footerTitle: data.footerTitle,
       footerDescription: data.footerDescription,
       businessName: data.businessName,
-      representative: data.representative,
+      representative: data.representative || currentLegal.representative || "",
       registrationNumber: data.registrationNumber,
       contact: data.contact,
       directContactUrl: data.directContactUrl,
       directContactLabel: data.directContactLabel,
-      domain: data.domain
+      domain: data.domain || currentLegal.domain || "http://doyoulikeclassic.com/"
     });
   })();
 }
