@@ -76,7 +76,7 @@ export const contentInputSchema = z.object({
   seoDescription: z.string().trim().min(1).max(500).optional().default(
     "전공자부터 애호가까지, 클래식을 사랑하는 누구나! 좋아하는 음악이 같다는 건,\n이미 좋은 시작입니다.\n같은 취향, 같은 설렘을 만나는 클래식 로테이션 소개팅."
   ),
-  seoImageUrl: publicImageUrl.optional().default("/assets/images/search-preview-classic-rotation.jpg"),
+  seoImageUrl: publicImageUrl.optional().default("/assets/images/naver-search-preview-classic-rotation.jpg"),
   seoImageAlt: z.string().trim().min(1).max(120).optional().default("클래식을 좋아하세요 클래식 로테이션 소개팅 포스터"),
   naverVerification: z.string().trim().max(120).optional().default("e4244507795bed3d205bec2c7b58aa64a6242b9d"),
   faqText: z.string().trim().min(1).max(3000),
@@ -325,7 +325,7 @@ export function getContentForAdmin(db) {
     seoDescription: typeof seo.description === "string"
       ? seo.description
       : "전공자부터 애호가까지, 클래식을 사랑하는 누구나! 좋아하는 음악이 같다는 건,\n이미 좋은 시작입니다.\n같은 취향, 같은 설렘을 만나는 클래식 로테이션 소개팅.",
-    seoImageUrl: typeof seo.imageUrl === "string" ? seo.imageUrl : "/assets/images/search-preview-classic-rotation.jpg",
+    seoImageUrl: typeof seo.imageUrl === "string" ? seo.imageUrl : "/assets/images/naver-search-preview-classic-rotation.jpg",
     seoImageAlt: typeof seo.imageAlt === "string" ? seo.imageAlt : "클래식을 좋아하세요 클래식 로테이션 소개팅 포스터",
     naverVerification: typeof seo.naverVerification === "string"
       ? seo.naverVerification

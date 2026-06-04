@@ -11,7 +11,7 @@ const defaultMeta = {
     "이미 좋은 시작입니다.",
     "같은 취향, 같은 설렘을 만나는 클래식 로테이션 소개팅."
   ].join("\n"),
-  imageUrl: "/assets/images/search-preview-classic-rotation.jpg",
+  imageUrl: "/assets/images/naver-search-preview-classic-rotation.jpg",
   imageAlt: "클래식을 좋아하세요 클래식 로테이션 소개팅 포스터",
   naverVerification: "e4244507795bed3d205bec2c7b58aa64a6242b9d"
 };
@@ -66,6 +66,13 @@ publicRouter.get("/", (request, response, next) => {
     description: meta.description,
     url: meta.canonicalUrl,
     image: meta.imageUrl,
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      url: meta.imageUrl,
+      width: meta.imageWidth,
+      height: meta.imageHeight,
+      caption: meta.imageAlt
+    },
     inLanguage: "ko-KR"
   }).replace(/</g, "\\u003c");
 
