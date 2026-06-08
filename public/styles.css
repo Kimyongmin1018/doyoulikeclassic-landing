@@ -988,6 +988,10 @@ dd {
   font-size: 17px;
 }
 
+.reason-follow {
+  display: inline;
+}
+
 .process-list {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1074,6 +1078,7 @@ dd {
   display: grid;
   gap: 28px;
   align-items: start;
+  overflow: hidden;
 }
 
 .participants-layout .section-copy {
@@ -1088,6 +1093,7 @@ dd {
 .participant-cloud {
   position: relative;
   min-height: 328px;
+  isolation: isolate;
 }
 
 .participant-cloud::before,
@@ -1098,16 +1104,16 @@ dd {
 }
 
 .participant-cloud::before {
-  inset: -22% -12%;
-  opacity: 0.95;
-  filter: blur(10px);
+  inset: -26% -10% -20%;
+  opacity: 0.64;
+  filter: blur(30px);
   background:
-    radial-gradient(circle at 14% 32%, rgba(251, 249, 246, 0.62), transparent 34%),
-    radial-gradient(circle at 44% 56%, rgba(194, 138, 61, 0.2), transparent 36%),
-    radial-gradient(circle at 76% 18%, rgba(157, 120, 88, 0.28), transparent 34%),
-    radial-gradient(circle at 84% 80%, rgba(233, 227, 216, 0.52), transparent 32%);
-  -webkit-mask-image: radial-gradient(ellipse at center, #000 0 56%, rgba(0, 0, 0, 0.72) 68%, transparent 84%);
-  mask-image: radial-gradient(ellipse at center, #000 0 56%, rgba(0, 0, 0, 0.72) 68%, transparent 84%);
+    radial-gradient(ellipse at 16% 34%, rgba(251, 249, 246, 0.5), transparent 48%),
+    radial-gradient(ellipse at 45% 56%, rgba(194, 138, 61, 0.13), transparent 52%),
+    radial-gradient(ellipse at 74% 18%, rgba(157, 120, 88, 0.18), transparent 50%),
+    radial-gradient(ellipse at 84% 78%, rgba(233, 227, 216, 0.36), transparent 46%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 0 34%, rgba(0, 0, 0, 0.46) 62%, transparent 94%);
+  mask-image: radial-gradient(ellipse at center, #000 0 34%, rgba(0, 0, 0, 0.46) 62%, transparent 94%);
 }
 
 .participant-cloud::after {
@@ -1237,7 +1243,7 @@ dd {
   min-width: 184px;
   text-align: center;
   margin-top: 34px;
-  transform: translateX(14px);
+  transform: translateX(30px);
 }
 
 .instagram-profile-photo {
@@ -1251,7 +1257,7 @@ dd {
 .instagram-feed-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  gap: 24px;
   align-items: center;
 }
 
@@ -1580,7 +1586,7 @@ main > .chatbot-section > .chatbot-panel-inline {
 }
 
 .footer-copyright {
-  margin: 0;
+  margin: 6px 0 0;
   color: rgba(255, 255, 255, 0.68);
   font-size: 13px;
 }
@@ -2460,6 +2466,11 @@ main > .chatbot-section > .chatbot-panel-inline {
 
   .reason-list p br {
     display: none;
+  }
+
+  .reason-follow {
+    display: block;
+    margin-top: 10px;
   }
 
   .process-list {
