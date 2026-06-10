@@ -62,6 +62,29 @@ function truncateText(value, maxLength) {
   return String(value || "").trim().slice(0, maxLength);
 }
 
+function buildEventValue(body, eventType) {
+  const value = truncateText(body?.value, 240);
+  if (eventType !== "apply_click") return value;
+
+  return JSON.stringify({
+    target: value,
+    previousMenu: truncateText(body?.previousMenu, 120)
+  });
+}
+
+function getPreviousMenuFromApplyValue(eventValue) {
+  try {
+    const parsed = JSON.parse(String(eventValue || ""));
+    if (!parsed || typeof parsed !== "object" || !Object.hasOwn(parsed, "previousMenu")) {
+      return null;
+    }
+
+    return truncateText(parsed.previousMenu, 120) || "직전 메뉴 없음";
+  } catch {
+    return null;
+  }
+}
+
 function getRequestPath(request) {
   const rawPath = typeof request.path === "string" ? request.path : "/";
   return rawPath.startsWith("/") ? rawPath.slice(0, 120) : "/";
@@ -197,7 +220,7 @@ export function recordTrafficEvent(request, response, now = new Date()) {
     visitorHash: getVisitorIdentity(request, response),
     eventType,
     eventLabel: truncateText(request.body?.label, 120),
-    eventValue: truncateText(request.body?.value, 240),
+    eventValue: buildEventValue(request.body, eventType),
     path: truncateText(request.body?.path, 120) || getRequestPath(request),
     referrer: sourceInfo.referrer,
     source: sourceInfo.source,
@@ -214,6 +237,42 @@ function getTopRows(db, sql, params = []) {
     count: Number(row.count || 0),
     uniqueVisitors: Number(row.uniqueVisitors || 0)
   }));
+}
+
+function getApplyPreviousMenuRows(db, startBucket) {
+  const rows = db.prepare(`
+    select event_value as eventValue, visitor_hash as visitorHash
+    from traffic_events
+    where event_type = 'apply_click'
+      and hour_bucket >= ?
+  `).all(startBucket);
+  const byMenu = new Map();
+
+  rows.forEach((row) => {
+    const label = getPreviousMenuFromApplyValue(row.eventValue);
+    if (!label) return;
+
+    if (!byMenu.has(label)) {
+      byMenu.set(label, { label, count: 0, visitorHashes: new Set() });
+    }
+
+    const aggregate = byMenu.get(label);
+    aggregate.count += 1;
+    aggregate.visitorHashes.add(row.visitorHash);
+  });
+
+  return Array.from(byMenu.values())
+    .map((row) => ({
+      label: row.label,
+      count: row.count,
+      uniqueVisitors: row.visitorHashes.size
+    }))
+    .sort((left, right) => (
+      right.count - left.count ||
+      right.uniqueVisitors - left.uniqueVisitors ||
+      left.label.localeCompare(right.label, "ko")
+    ))
+    .slice(0, 10);
 }
 
 export function getTrafficLog(db, options = {}) {
@@ -307,6 +366,7 @@ export function getTrafficLog(db, options = {}) {
   const applyClickCount = applyClickRows
     .filter((row) => countedApplyClickLabels.has(row.label))
     .reduce((sum, row) => sum + row.count, 0);
+  const applyPreviousMenuRows = getApplyPreviousMenuRows(db, startBucket);
 
   return {
     days,
@@ -320,6 +380,7 @@ export function getTrafficLog(db, options = {}) {
     sourceRows,
     searchTermRows,
     menuClickRows,
-    applyClickRows
+    applyClickRows,
+    applyPreviousMenuRows
   };
 }

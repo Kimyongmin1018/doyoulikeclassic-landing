@@ -589,6 +589,10 @@ main > .section > .section-inner {
   background: transparent;
 }
 
+.review-section {
+  background: transparent;
+}
+
 .participants-section {
   background: transparent;
 }
@@ -604,8 +608,121 @@ main > .section > .section-inner {
   align-items: start;
 }
 
-.application-status-heading {
+.application-status-heading,
+.review-heading {
   align-self: start;
+}
+
+.review-layout {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+  height: var(--section-card-min-height);
+  overflow: hidden;
+}
+
+.review-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(20px, 4vw, 56px);
+  row-gap: clamp(8px, 1.4vw, 16px);
+  align-content: center;
+  align-items: center;
+  justify-items: center;
+  overflow: hidden;
+  padding: 0 clamp(28px, 5vw, 90px) 4px;
+  min-height: 0;
+}
+
+.review-image-card {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18px 36px rgba(17, 17, 24, 0.14);
+}
+
+.review-image-card img {
+  width: 100%;
+  height: auto;
+}
+
+.review-image-card-1 {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  z-index: 1;
+  width: min(62%, 280px);
+}
+
+.review-image-card-2 {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  z-index: 2;
+  width: min(66%, 300px);
+  margin-top: clamp(20px, 2.6vw, 32px);
+}
+
+.review-image-card-3 {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: end;
+  z-index: 3;
+  width: min(68%, 310px);
+}
+
+.review-image-card-4 {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+  z-index: 4;
+  width: min(62%, 285px);
+  margin-top: clamp(20px, 2.6vw, 32px);
+}
+
+.js .review-gallery .review-image-card {
+  opacity: 0;
+  transform: translateY(34px) scale(0.98);
+}
+
+.js .review-gallery.is-review-visible .review-image-card {
+  animation: review-float-in 900ms cubic-bezier(0.2, 0.9, 0.24, 1) forwards;
+}
+
+.js .review-gallery.is-review-visible .review-image-card-1 {
+  animation-delay: 80ms;
+}
+
+.js .review-gallery.is-review-visible .review-image-card-2 {
+  animation-delay: 300ms;
+}
+
+.js .review-gallery.is-review-visible .review-image-card-3 {
+  animation-delay: 520ms;
+}
+
+.js .review-gallery.is-review-visible .review-image-card-4 {
+  animation-delay: 740ms;
+}
+
+@keyframes review-float-in {
+  0% {
+    opacity: 0;
+    transform: translateY(34px) scale(0.98);
+  }
+
+  62% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.01);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .status-gallery {
@@ -2009,6 +2126,36 @@ main > .chatbot-section > .chatbot-panel-inline {
     --status-visible-items: 2;
     grid-auto-columns: calc((100% - 16px) / var(--status-visible-items));
     gap: 16px;
+  }
+
+  .review-layout {
+    height: auto;
+  }
+
+  .review-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: auto;
+  }
+
+  .review-image-card-1,
+  .review-image-card-2,
+  .review-image-card-3,
+  .review-image-card-4 {
+    position: static;
+    width: min(86%, 720px);
+    margin: 0;
+  }
+
+  .review-image-card-1,
+  .review-image-card-3 {
+    align-self: flex-start;
+  }
+
+  .review-image-card-2,
+  .review-image-card-4 {
+    align-self: flex-end;
   }
 
   .participant-cloud {

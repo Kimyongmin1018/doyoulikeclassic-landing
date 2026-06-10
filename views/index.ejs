@@ -20,6 +20,12 @@
     { label: "4기", src: "/assets/images/participant-status-4th.jpg" },
     { label: "5기", src: "/assets/images/participant-status-5th.jpg" }
   ];
+  const reviewImages = [
+    { src: "/assets/images/review-message-1.jpg", alt: "클래식을 좋아하세요 참가자 후기 1" },
+    { src: "/assets/images/review-message-2.jpg", alt: "클래식을 좋아하세요 참가자 후기 2" },
+    { src: "/assets/images/review-message-3.jpg", alt: "클래식을 좋아하세요 참가자 후기 3" },
+    { src: "/assets/images/review-message-4.jpg", alt: "클래식을 좋아하세요 참가자 후기 4" }
+  ];
   const footerTitle = model.content.legal.footerTitle || "클래식을 좋아하세요..?";
   const footerDescription = model.content.legal.footerDescription || "서울 강남권에서 열리는 국내 최초 클래식 취향 기반 로테이션 소개팅";
   const directContactUrl = model.content.legal.directContactUrl || "";
@@ -157,6 +163,45 @@
     </section>
   <% } %>
 
+  <section id="instagram" class="section instagram-section" aria-labelledby="instagram-title">
+    <div class="section-inner instagram-shell">
+      <div class="instagram-profile reveal">
+        <div class="instagram-avatar" aria-hidden="true">
+          <img src="/assets/images/doyoulikeclassic-logo.jpg" alt="">
+        </div>
+        <div class="instagram-profile-copy">
+          <div class="section-heading">
+            <p class="eyebrow section-eyebrow instagram-eyebrow">Instagram</p>
+            <h2 id="instagram-title"><span class="instagram-title-line">인스타그램에서 현장 영상을 확인해보세요.</span></h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="instagram-feed-row">
+        <div class="reel-grid instagram-feed" aria-label="Instagram Reels 미리보기">
+          <% model.content.instagram.reels.forEach((url, index) => { %>
+            <a class="reel-card reveal" href="<%= url %>" target="_blank" rel="noreferrer" aria-label="Instagram Reel <%= String(index + 1).padStart(2, "0") %> 새 창으로 보기">
+              <img src="<%= reelPreviewImages[index % reelPreviewImages.length] %>" alt="Instagram Reel <%= String(index + 1).padStart(2, "0") %> 썸네일" loading="lazy">
+              <span class="reel-shade" aria-hidden="true"></span>
+              <span class="reel-badge">REELS</span>
+              <span class="reel-play" aria-hidden="true"></span>
+              <span class="reel-copy">
+                <small><%= model.content.instagram.handle %></small>
+              </span>
+            </a>
+          <% }) %>
+        </div>
+        <div class="instagram-profile-action reveal">
+          <img class="instagram-profile-photo" src="/assets/images/doyoulikeclassic-logo.jpg" alt="doyoulike.classic 프로필">
+          <strong><%= model.content.instagram.handle %></strong>
+          <% if (model.content.instagram.url) { %>
+            <a class="button button-white button-card-radius" href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer">Instagram에서 보기</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="application-status" class="section application-status-section" aria-labelledby="application-status-title">
     <div class="section-inner application-status-layout">
       <div class="section-heading application-status-heading reveal">
@@ -174,6 +219,22 @@
           <% }) %>
         </div>
         <button class="status-carousel-button status-carousel-button-next" type="button" aria-label="다음 참가자 데이터 보기" data-status-carousel-next>›</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="review" class="section review-section" aria-labelledby="review-title">
+    <div class="section-inner review-layout">
+      <div class="section-heading review-heading reveal">
+        <p class="eyebrow section-eyebrow">Review</p>
+        <h2 id="review-title">실제 후기</h2>
+      </div>
+      <div class="review-gallery reveal" aria-label="실제 참가자 후기 이미지">
+        <% reviewImages.forEach((image, index) => { %>
+          <figure class="review-image-card review-image-card-<%= index + 1 %>">
+            <img src="<%= image.src %>" alt="<%= image.alt %>" loading="lazy">
+          </figure>
+        <% }) %>
       </div>
     </div>
   </section>
@@ -237,45 +298,6 @@
         <% displayParticipants.forEach((participant, index) => { %>
           <span class="participant-chip chip-<%= index % 9 %>"><%= participant %></span>
         <% }) %>
-      </div>
-    </div>
-  </section>
-
-  <section id="instagram" class="section instagram-section" aria-labelledby="instagram-title">
-    <div class="section-inner instagram-shell">
-      <div class="instagram-profile reveal">
-        <div class="instagram-avatar" aria-hidden="true">
-          <img src="/assets/images/doyoulikeclassic-logo.jpg" alt="">
-        </div>
-        <div class="instagram-profile-copy">
-          <div class="section-heading">
-            <p class="eyebrow section-eyebrow instagram-eyebrow">Instagram</p>
-            <h2 id="instagram-title"><span class="instagram-title-line">인스타그램에서 현장 영상을 확인해보세요.</span></h2>
-          </div>
-        </div>
-      </div>
-
-      <div class="instagram-feed-row">
-        <div class="reel-grid instagram-feed" aria-label="Instagram Reels 미리보기">
-          <% model.content.instagram.reels.forEach((url, index) => { %>
-            <a class="reel-card reveal" href="<%= url %>" target="_blank" rel="noreferrer" aria-label="Instagram Reel <%= String(index + 1).padStart(2, "0") %> 새 창으로 보기">
-              <img src="<%= reelPreviewImages[index % reelPreviewImages.length] %>" alt="Instagram Reel <%= String(index + 1).padStart(2, "0") %> 썸네일" loading="lazy">
-              <span class="reel-shade" aria-hidden="true"></span>
-              <span class="reel-badge">REELS</span>
-              <span class="reel-play" aria-hidden="true"></span>
-              <span class="reel-copy">
-                <small><%= model.content.instagram.handle %></small>
-              </span>
-            </a>
-          <% }) %>
-        </div>
-        <div class="instagram-profile-action reveal">
-          <img class="instagram-profile-photo" src="/assets/images/doyoulikeclassic-logo.jpg" alt="doyoulike.classic 프로필">
-          <strong><%= model.content.instagram.handle %></strong>
-          <% if (model.content.instagram.url) { %>
-            <a class="button button-white button-card-radius" href="<%= model.content.instagram.url %>" target="_blank" rel="noreferrer">Instagram에서 보기</a>
-          <% } %>
-        </div>
       </div>
     </div>
   </section>

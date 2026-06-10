@@ -295,6 +295,18 @@
         <% } %>
       </section>
       <section>
+        <h3>신청 전 마지막 메뉴</h3>
+        <% if (trafficLog.applyPreviousMenuRows.length) { %>
+          <ul>
+            <% trafficLog.applyPreviousMenuRows.forEach((row) => { %>
+              <li><span><%= row.label %></span><strong><%= row.count %>회</strong><small><%= row.uniqueVisitors %>명</small></li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p>새 추적 코드 반영 후 신청 클릭부터 표시됩니다.</p>
+        <% } %>
+      </section>
+      <section>
         <h3>유입 경로</h3>
         <% if (trafficLog.sourceRows.length) { %>
           <ul>

@@ -20,6 +20,30 @@ if ("IntersectionObserver" in window) {
   revealItems.forEach((item) => item.classList.add("is-visible"));
 }
 
+const reviewGalleries = document.querySelectorAll(".review-gallery");
+
+if ("IntersectionObserver" in window) {
+  const reviewObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.remove("is-review-visible");
+          void entry.target.offsetWidth;
+          entry.target.classList.add("is-review-visible");
+          return;
+        }
+
+        entry.target.classList.remove("is-review-visible");
+      });
+    },
+    { threshold: 0.36 }
+  );
+
+  reviewGalleries.forEach((gallery) => reviewObserver.observe(gallery));
+} else {
+  reviewGalleries.forEach((gallery) => gallery.classList.add("is-review-visible"));
+}
+
 document.querySelectorAll('a[href^="#"]').forEach((link) => {
   link.addEventListener("click", () => {
     const activeElement = document.activeElement;
@@ -55,13 +79,32 @@ function getCurrentSearchTerm() {
   return "";
 }
 
-function sendAnalyticsEvent(eventType, label, value = "") {
+let lastMenuClickLabel = "";
+
+try {
+  lastMenuClickLabel = window.sessionStorage.getItem("last_menu_click_label") || "";
+} catch {
+  lastMenuClickLabel = "";
+}
+
+function rememberMenuClick(label) {
+  lastMenuClickLabel = label;
+
+  try {
+    window.sessionStorage.setItem("last_menu_click_label", label);
+  } catch {
+    // Session storage is optional; the in-memory value still works for this page view.
+  }
+}
+
+function sendAnalyticsEvent(eventType, label, value = "", extra = {}) {
   const payload = JSON.stringify({
     eventType,
     label,
     value,
     path: window.location.pathname,
-    searchTerm: getCurrentSearchTerm()
+    searchTerm: getCurrentSearchTerm(),
+    ...extra
   });
 
   if (navigator.sendBeacon) {
@@ -81,10 +124,19 @@ function sendAnalyticsEvent(eventType, label, value = "") {
 
 document.querySelectorAll("[data-analytics-event]").forEach((element) => {
   element.addEventListener("click", () => {
+    const eventType = element.dataset.analyticsEvent || "";
+    const label = element.dataset.analyticsLabel || element.textContent || "";
+    const value = element instanceof HTMLAnchorElement ? element.href : "";
+
+    if (eventType === "menu_click") {
+      rememberMenuClick(label);
+    }
+
     sendAnalyticsEvent(
-      element.dataset.analyticsEvent || "",
-      element.dataset.analyticsLabel || element.textContent || "",
-      element instanceof HTMLAnchorElement ? element.href : ""
+      eventType,
+      label,
+      value,
+      eventType === "apply_click" ? { previousMenu: lastMenuClickLabel } : {}
     );
   });
 });

@@ -37,12 +37,14 @@ describe("traffic log", () => {
       eventType: "apply_click",
       label: "일정 카드 신청 버튼",
       value: "https://forms.gle/demo",
+      previousMenu: "이전 기수",
       path: "/"
     });
     await visitor.post("/traffic/event").send({
       eventType: "apply_click",
       label: "상단 신청 버튼",
       value: "https://forms.gle/demo",
+      previousMenu: "현장 영상",
       path: "/"
     });
     await visitor.post("/traffic/event").send({
@@ -69,11 +71,13 @@ describe("traffic log", () => {
     expect(dashboard.text).toContain("신청 버튼 클릭");
     expect(dashboard.text).toContain("<strong>2</strong><small>신청 버튼 클릭</small>");
     expect(dashboard.text).toContain("메뉴 클릭 순위");
+    expect(dashboard.text).toContain("신청 전 마지막 메뉴");
     expect(dashboard.text).toContain("유입 경로");
     expect(dashboard.text).toContain("유입 검색어 / UTM");
     expect(dashboard.text).toContain("일정 카드 신청 버튼");
     expect(dashboard.text).toContain("상단 신청 버튼");
     expect(dashboard.text).toContain("모바일 하단 신청 버튼");
+    expect(dashboard.text).toContain("이전 기수");
     expect(dashboard.text).toContain("현장 영상");
     expect(dashboard.text).toContain("naver");
     expect(dashboard.text).toContain("클래식");
@@ -88,6 +92,7 @@ describe("traffic log", () => {
       eventType: "apply_click",
       label: "상단 신청 버튼",
       value: "https://forms.gle/demo",
+      previousMenu: "FAQ",
       path: "/"
     });
     const menuClick = await visitor.post("/traffic/event").send({
@@ -112,5 +117,13 @@ describe("traffic log", () => {
       { eventType: "apply_click", eventLabel: "상단 신청 버튼", count: 1 },
       { eventType: "menu_click", eventLabel: "일정", count: 1 }
     ]);
+
+    const applyEvent = app.locals.db
+      .prepare("select event_value as eventValue from traffic_events where event_type = 'apply_click'")
+      .get();
+    expect(JSON.parse(applyEvent.eventValue)).toEqual({
+      target: "https://forms.gle/demo",
+      previousMenu: "FAQ"
+    });
   });
 });
