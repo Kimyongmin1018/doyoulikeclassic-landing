@@ -414,7 +414,7 @@ main > .section > .section-inner {
 }
 
 #hero-title {
-  font-size: 64px;
+  font-size: 60px;
   font-weight: 800;
 }
 
@@ -598,6 +598,12 @@ main > .section > .section-inner {
   background: transparent;
 }
 
+.application-status-layout,
+.review-layout,
+.participants-layout {
+  --section-card-bg-bleed: clamp(220px, 18vw, 420px);
+}
+
 .application-status-copy {
   display: grid;
   gap: 24px;
@@ -610,7 +616,7 @@ main > .section > .section-inner {
   align-items: start;
   height: var(--section-card-min-height);
   max-height: var(--section-card-min-height);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .application-status-heading,
@@ -625,7 +631,7 @@ main > .section > .section-inner {
   align-items: start;
   height: var(--section-card-min-height);
   max-height: var(--section-card-min-height);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .review-gallery {
@@ -748,8 +754,9 @@ main > .section > .section-inner {
   --status-visible-items: 3;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: calc((100% - 48px) / var(--status-visible-items));
+  grid-auto-columns: min(280px, calc((100% - 48px) / var(--status-visible-items)));
   gap: 24px;
+  justify-content: center;
   overflow-x: auto;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
@@ -1200,7 +1207,7 @@ dd {
   display: grid;
   gap: 28px;
   align-items: start;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .participants-layout .section-copy {
@@ -3195,7 +3202,7 @@ main > .section > .section-inner::before {
   bottom: -1px;
   left: 50%;
   z-index: -1;
-  width: min(calc(100vw - 32px), calc(100% + var(--section-card-bg-bleed)));
+  width: min(calc(100vw - 16px), calc(100% + var(--section-card-bg-bleed)));
   border: 1px solid rgba(17, 17, 24, 0.08);
   border-radius: inherit;
   background: var(--color-card-bg);
