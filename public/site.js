@@ -299,6 +299,8 @@ document.querySelectorAll("[data-status-carousel]").forEach((carousel) => {
 
   if (!(track instanceof HTMLElement)) return;
 
+  track.scrollLeft = 0;
+
   function getScrollStep() {
     const firstCard = track.querySelector(".status-board-image-card");
     if (!(firstCard instanceof HTMLElement)) {
@@ -335,6 +337,10 @@ document.querySelectorAll("[data-status-carousel]").forEach((carousel) => {
 
   track.addEventListener("scroll", updateCarouselButtons, { passive: true });
   window.addEventListener("resize", updateCarouselButtons);
+  window.requestAnimationFrame(() => {
+    track.scrollLeft = 0;
+    updateCarouselButtons();
+  });
   updateCarouselButtons();
 });
 
@@ -365,10 +371,7 @@ if (chatbotDataElement && chatbotWidget) {
     launcher.setAttribute("aria-expanded", "true");
 
     if (!hasWelcomed) {
-      appendMessage(
-        "bot",
-        "안녕하세요. 신청 방법, 일정, 장소, 참가비를 물어보면 바로 안내해드릴게요."
-      );
+      appendMessage("bot", "안녕하세요. 무엇을 도와드릴까요?");
       hasWelcomed = true;
     }
 

@@ -414,8 +414,21 @@ main > .section > .section-inner {
 }
 
 #hero-title {
-  font-size: 60px;
+  font-size: 40px;
   font-weight: 800;
+}
+
+#event-title,
+#instagram-title,
+#application-status-title,
+#review-title,
+#why-title,
+#process-title,
+#participants-title,
+#faq-title,
+#contact-title {
+  font-size: 40px;
+  line-height: 1.08;
 }
 
 .badge-row,
@@ -751,12 +764,13 @@ main > .section > .section-inner {
 }
 
 .status-carousel-track {
-  --status-visible-items: 3;
+  --status-visible-items: 4;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: min(280px, calc((100% - 48px) / var(--status-visible-items)));
+  grid-auto-columns: calc((100% - 72px) / var(--status-visible-items));
   gap: 24px;
-  justify-content: center;
+  align-items: start;
+  justify-content: start;
   overflow-x: auto;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
@@ -846,11 +860,12 @@ main > .section > .section-inner {
 }
 
 .status-board-image {
+  display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 4 / 5;
   border-radius: inherit;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .status-board-header {
@@ -1997,7 +2012,20 @@ main > .chatbot-section > .chatbot-panel-inline {
   }
 
   #hero-title {
-    font-size: 50px;
+    font-size: 34px;
+  }
+
+  #event-title,
+  #instagram-title,
+  #application-status-title,
+  #review-title,
+  #why-title,
+  #process-title,
+  #participants-title,
+  #faq-title,
+  #contact-title {
+    font-size: 34px;
+    line-height: 1.08;
   }
 
   .site-header {
@@ -2152,6 +2180,7 @@ main > .chatbot-section > .chatbot-panel-inline {
     grid-template-rows: none;
     gap: 10px;
     min-height: auto;
+    margin-top: 0;
     padding: 0;
   }
 
@@ -2200,9 +2229,9 @@ main > .chatbot-section > .chatbot-panel-inline {
     z-index: 30;
     display: block;
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    background: rgba(255, 255, 255, 0.94);
-    border-top: 1px solid rgba(17, 17, 24, 0.12);
-    backdrop-filter: blur(14px);
+    background: #432813;
+    border-top: 0;
+    backdrop-filter: none;
   }
 
   .mobile-cta .button {
@@ -2250,7 +2279,7 @@ main > .chatbot-section > .chatbot-panel-inline {
   }
 
   #hero-title {
-    font-size: 38px;
+    font-size: 25px;
   }
 
   .section {
@@ -2463,6 +2492,24 @@ main > .chatbot-section > .chatbot-panel-inline {
   #hero-title {
     font-size: 34px;
     line-height: 1.04;
+  }
+
+  #hero-title {
+    font-size: 25px;
+    line-height: 1.08;
+  }
+
+  #event-title,
+  #instagram-title,
+  #application-status-title,
+  #review-title,
+  #why-title,
+  #process-title,
+  #participants-title,
+  #faq-title,
+  #contact-title {
+    font-size: 25px;
+    line-height: 1.08;
   }
 
   h2 {
@@ -2929,6 +2976,26 @@ main > .chatbot-section > .chatbot-panel-inline {
   #hero-title {
     max-width: 100%;
     font-size: clamp(31px, 9.2vw, 38px);
+    line-height: 1.08;
+  }
+
+  #hero-title {
+    max-width: 100%;
+    font-size: clamp(21px, 6vw, 25px);
+    line-height: 1.08;
+  }
+
+  #event-title,
+  #instagram-title,
+  #application-status-title,
+  #review-title,
+  #why-title,
+  #process-title,
+  #participants-title,
+  #faq-title,
+  #contact-title {
+    max-width: 100%;
+    font-size: clamp(21px, 6vw, 25px);
     line-height: 1.08;
   }
 
