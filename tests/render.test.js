@@ -18,4 +18,19 @@ describe("rendering", () => {
     expect(response.text).toContain("궁금한 점은 챗봇에게 바로 물어보세요.");
     expect(response.text).toContain("directContactLabel");
   });
+
+  it("renders Clarity and Google Analytics tags on the public landing page", async () => {
+    const app = createApp({
+      dbPath: ":memory:",
+      seed: true,
+      googleAnalyticsMeasurementId: "G-TEST1234"
+    });
+    const response = await request(app).get("/");
+
+    expect(response.status).toBe(200);
+    expect(response.text).toContain("https://www.clarity.ms/tag/");
+    expect(response.text).toContain("\"x6svg2d1wr\"");
+    expect(response.text).toContain("https://www.googletagmanager.com/gtag/js?id=G-TEST1234");
+    expect(response.text).toContain("gtag(\"config\", \"G-TEST1234\")");
+  });
 });

@@ -5,5 +5,10 @@ data/*.sqlite
 data/*.sqlite-*
 logs/
 VSCodeUserSetup-x64-*.exe
+ChromeSetup.exe
+chromeremotedesktophost*.msi
+playwright-report/
+test-results/
+tmp/
 .DS_Store
 .superpowers/

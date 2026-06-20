@@ -31,7 +31,36 @@ export function createApp(overrides = {}) {
   app.locals.db = db;
   app.locals.serviceName = "클래식을 좋아하세요";
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "https://www.googletagmanager.com",
+            "https://www.clarity.ms"
+          ],
+          connectSrc: [
+            "'self'",
+            "https://www.google-analytics.com",
+            "https://analytics.google.com",
+            "https://stats.g.doubleclick.net",
+            "https://www.clarity.ms",
+            "https://*.clarity.ms"
+          ],
+          imgSrc: [
+            "'self'",
+            "data:",
+            "https://www.google-analytics.com",
+            "https://stats.g.doubleclick.net",
+            "https://www.clarity.ms",
+            "https://*.clarity.ms"
+          ]
+        }
+      }
+    })
+  );
   app.use(cookieParser(config.sessionSecret));
   app.use(express.urlencoded({ extended: false }));
   app.use(express.json());

@@ -6,8 +6,13 @@ const overrideAliases = {
   dbPath: "DATABASE_PATH",
   adminPassword: "ADMIN_PASSWORD",
   sessionSecret: "SESSION_SECRET",
-  publicBaseUrl: "PUBLIC_BASE_URL"
+  publicBaseUrl: "PUBLIC_BASE_URL",
+  clarityProjectId: "CLARITY_PROJECT_ID",
+  googleAnalyticsMeasurementId: "GOOGLE_ANALYTICS_MEASUREMENT_ID",
+  gaMeasurementId: "GA_MEASUREMENT_ID"
 };
+
+const defaultClarityProjectId = "x6svg2d1wr";
 
 const unsafeAdminPasswords = new Set(["change-this-before-production"]);
 const unsafeSessionSecrets = new Set([
@@ -27,6 +32,23 @@ function normalizeOverrides(overrides) {
   return normalized;
 }
 
+function normalizeTrackingId(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const trimmed = value.trim();
+  return /^[a-zA-Z0-9_-]+$/.test(trimmed) ? trimmed : "";
+}
+
+function resolveClarityProjectId(env) {
+  if (Object.hasOwn(env, "CLARITY_PROJECT_ID")) {
+    return normalizeTrackingId(env.CLARITY_PROJECT_ID);
+  }
+
+  return defaultClarityProjectId;
+}
+
 function assertProductionSecrets(config) {
   if (config.nodeEnv !== "production") {
     return;
@@ -43,6 +65,10 @@ function assertProductionSecrets(config) {
 
 export function loadConfig(overrides = {}) {
   const env = { ...process.env, ...normalizeOverrides(overrides) };
+  const clarityProjectId = resolveClarityProjectId(env);
+  const googleAnalyticsMeasurementId = normalizeTrackingId(
+    env.GOOGLE_ANALYTICS_MEASUREMENT_ID || env.GA_MEASUREMENT_ID || ""
+  );
 
   const config = {
     nodeEnv: env.NODE_ENV || "development",
@@ -51,6 +77,12 @@ export function loadConfig(overrides = {}) {
     adminPassword: env.ADMIN_PASSWORD || "change-this-before-production",
     sessionSecret: env.SESSION_SECRET || "dev-session-secret",
     publicBaseUrl: env.PUBLIC_BASE_URL || "http://localhost:3000",
+    clarityProjectId,
+    googleAnalyticsMeasurementId,
+    analytics: {
+      clarityProjectId,
+      googleAnalyticsMeasurementId
+    },
     secureCookies: (env.NODE_ENV || "development") === "production"
   };
 

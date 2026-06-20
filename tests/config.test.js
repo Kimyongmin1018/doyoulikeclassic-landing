@@ -8,6 +8,8 @@ describe("loadConfig", () => {
       adminPassword: "secret",
       sessionSecret: "test-session-secret",
       publicBaseUrl: "http://example.test",
+      clarityProjectId: "clarity123",
+      googleAnalyticsMeasurementId: "G-TEST1234",
       nodeEnv: "test",
       port: 4242
     });
@@ -19,8 +21,25 @@ describe("loadConfig", () => {
       adminPassword: "secret",
       sessionSecret: "test-session-secret",
       publicBaseUrl: "http://example.test",
+      clarityProjectId: "clarity123",
+      googleAnalyticsMeasurementId: "G-TEST1234",
+      analytics: {
+        clarityProjectId: "clarity123",
+        googleAnalyticsMeasurementId: "G-TEST1234"
+      },
       secureCookies: false
     });
+  });
+
+  it("uses the Clarity project by default and only enables Google Analytics when configured", () => {
+    const config = loadConfig({
+      dbPath: ":memory:",
+      adminPassword: "secret",
+      sessionSecret: "test-session-secret"
+    });
+
+    expect(config.analytics.clarityProjectId).toBe("x6svg2d1wr");
+    expect(config.analytics.googleAnalyticsMeasurementId).toBe("");
   });
 
   it("rejects placeholder secrets in production", () => {

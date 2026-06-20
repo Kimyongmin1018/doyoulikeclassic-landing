@@ -97,7 +97,37 @@ function rememberMenuClick(label) {
   }
 }
 
+function sendGoogleAnalyticsEvent(eventType, label, value = "", extra = {}) {
+  if (!eventType || typeof window.gtag !== "function") {
+    return;
+  }
+
+  const params = {
+    event_category: "landing",
+    event_label: label,
+    link_url: value,
+    page_path: window.location.pathname
+  };
+  const searchTerm = getCurrentSearchTerm();
+
+  if (searchTerm) {
+    params.search_term = searchTerm;
+  }
+
+  if (extra.previousMenu) {
+    params.previous_menu = extra.previousMenu;
+  }
+
+  try {
+    window.gtag("event", eventType, params);
+  } catch {
+    // Analytics should never block the primary click action.
+  }
+}
+
 function sendAnalyticsEvent(eventType, label, value = "", extra = {}) {
+  sendGoogleAnalyticsEvent(eventType, label, value, extra);
+
   const payload = JSON.stringify({
     eventType,
     label,

@@ -85,6 +85,7 @@ publicRouter.get("/", (request, response, next) => {
     response.render("layout", {
       title: meta.title,
       meta,
+      analytics: request.config.analytics,
       body: html
     });
   });
